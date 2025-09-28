@@ -41,7 +41,7 @@ public class CommentDaoImpl implements CommentDao {
 	}
 
 	@Override
-	public int getNextPageCount(Criteria criteria, Long boardNum) {
-		return commentMapper.getNextPageCount(criteria, boardNum);
+	public int getPageCount(Criteria criteria, Long boardNum) {
+		return commentMapper.getPageCount(criteria, boardNum);
 	}
 }

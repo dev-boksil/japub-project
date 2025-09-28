@@ -3,11 +3,13 @@ package com.app.japub.domain.service.product;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,9 +30,9 @@ public class ProductServiceImpl implements ProductService {
 	private static final int THUMBNAIL_SIZE = 400;
 
 	@Override
-	public boolean insert(MultipartFile multipartFile, ProductDto productDto, File uploadPath, String datePath) {
+	public boolean insert(MultipartFile multipartFile, ProductDto productDto, String directoryPath, String datePath) {
 		try {
-			upload(multipartFile, productDto, uploadPath, datePath);
+			upload(multipartFile, productDto, directoryPath, datePath);
 			return productDao.insert(productDto) == DbConstants.SUCCESS_CODE;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -51,14 +53,9 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public boolean update(MultipartFile multipartFile, ProductDto productDto, File uploadPath, String datePath) {
+	public boolean update(MultipartFile multipartFile, ProductDto productDto, String directoryPath, String datePath) {
 		try {
-			System.out.println("업데이트 전" +productDto);
-			if (!multipartFile.isEmpty()) {
-				System.out.println("multipartFile.isEmpty 들어옴");
-				upload(multipartFile, productDto, uploadPath, datePath);
-			}
-			System.out.println("업데이트 후" +productDto);
+			upload(multipartFile, productDto, directoryPath, datePath);
 			return productDao.update(productDto) == DbConstants.SUCCESS_CODE;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -90,37 +87,43 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public void upload(MultipartFile multipartFile, ProductDto productDto, File uploadPath, String datePath) {
+	public void upload(MultipartFile multipartFile, ProductDto productDto, String directoryPath, String datePath) {
+		if (multipartFile == null || multipartFile.isEmpty()) {
+			return;
+		}
 		String productUuid = UUID.randomUUID().toString();
 		String originalProductName = multipartFile.getOriginalFilename();
 		String productName = productUuid + "_" + originalProductName;
-		File product = new File(uploadPath, productName);
+		File uploadPath = fileService.getUploadPath(directoryPath, datePath);
+		File file = new File(uploadPath, productName);
 		try {
-			multipartFile.transferTo(product);
+			multipartFile.transferTo(file);
 			productDto.setProductUuid(productUuid);
 			productDto.setProductName(originalProductName);
 			productDto.setProductUploadPath(datePath);
-			if (!fileService.isImage(product)) {
+			if (!fileService.isImage(file)) {
 				throw new RuntimeException("productService upload no image");
 			}
-			File thumbnailProduct = new File(uploadPath, "t_" + productName);
-			fileService.createThumbnails(product, thumbnailProduct, THUMBNAIL_SIZE);
+			fileService.createThumbnails(file, new File(uploadPath, "t_" + productName), THUMBNAIL_SIZE);
 		} catch (Exception e) {
-			e.printStackTrace();
 			throw new RuntimeException("productService upload error", e);
 		}
 	}
 
 	@Override
-	public String getProductThumbnailUrl(ProductDto productDto) {
+	public String getProductThumbnailPath(ProductDto productDto) {
 		return productDto.getProductUploadPath() + "/t_" + productDto.getProductUuid() + "_"
 				+ productDto.getProductName();
-
 	}
 
 	@Override
-	public int getProductDiscountPrice(ProductDto productDto) {
-		return (int) (productDto.getProductPrice() * 0.9);
+	public void setProductThumbnailPath(ProductDto productDto) {
+		productDto.setProductThumbnailPath(getProductThumbnailPath(productDto));
+	}
+
+	@Override
+	public void setProductDiscountPrice(ProductDto productDto) {
+		productDto.setProductDiscountPrice((int) (productDto.getProductPrice() * 0.9));
 	}
 
 	@Override
@@ -168,24 +171,31 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public void autoDeleteFiles(List<ProductDto> yesterdayProducts, String defaultPath, String datePath) {
-
-		List<Path> paths = yesterdayProducts.stream().map(product -> Paths.get(defaultPath,
-				product.getProductUploadPath(), product.getProductUuid() + "_" + product.getProductName()))
-				.collect(Collectors.toList());
-
+	public void autoDeleteFiles(List<ProductDto> yesterdayProducts, String directoryPath, String yesterdayPath) {
+		List<Path> paths = new ArrayList<>();
 		yesterdayProducts.stream()
-				.map(product -> Paths.get(defaultPath, product.getProductUploadPath(),
-						"t_" + product.getProductUuid() + "_" + product.getProductName()))
-				.collect(Collectors.toList()).forEach(paths::add);
+				.map(product -> Paths.get(directoryPath, getProductThumbnailPath(product).replace("t_", "")))
+				.forEach(paths::add);
+		yesterdayProducts.stream().map(product -> Paths.get(directoryPath, getProductThumbnailPath(product)))
+				.forEach(paths::add);
+		File dir = new File(directoryPath, yesterdayPath);
+		File[] products = dir.listFiles();
+		products = products == null ? new File[0] : products;
+		Arrays.stream(products).filter(product -> !paths.contains(product.toPath())).forEach(File::delete);
+	}
 
-		File[] deleteFiles = Paths.get(defaultPath, datePath).toFile()
-				.listFiles(product -> !paths.contains(product.toPath()));
-
-		if (deleteFiles != null) {
-			Arrays.asList(deleteFiles).forEach(File::delete);
+	@Override
+	public List<ProductDto> findByCategoryAndAmount(String category, int amount) {
+		Criteria criteria = new Criteria();
+		criteria.setAmount(amount);
+		criteria.setCategory(category);
+		try {
+			return findByCriteria(criteria);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("productService findByCategoryAndAmount error");
+			return Collections.emptyList();
 		}
-
 	}
 
 }

@@ -24,6 +24,10 @@ public interface BoardService {
 	
 	public abstract void setBoardRegisterDate(BoardDto boardDto);
 	
+	public abstract void setBoardRegisterDateTime(BoardDto boardDto);
+	
 	public abstract BoardDto findByUserNumAndBoardNum(@Param("userNum") Long userNum, @Param("boardNum") Long boardNum);
+	
+	public abstract List<BoardDto> findByCategoryAndAmount(String category, int amount);
 	
 }

@@ -1,41 +1,145 @@
-// 섬네일 이미지 미리보기 기능
-const $thumbnail = $("#thumbnailPreview");
-const $fileInput = $("input[name=multipartFile]");
+(function() {
+
+	$("input[name=multipartFile]").on("change", function() {
+		const $thumbnail = $(".thumbnail-preview");
+		const $input = $(this);
+		const file = $input[0].files[0];
+		if (!file) { return; }
+		if (!file.type.startsWith("image/")) {
+			alert("이미지형식만 업로드 가능합니다.");
+			$thumbnail.hide();
+			$input.val("");
+			return;
+		}
+		const reader = new FileReader();
+		reader.onload = (e) => { $thumbnail.attr("src", e.target.result).show(); }
+		reader.readAsDataURL(file);
+	});
+
+	$(".product-cancel-btn").on("click", function(e) {
+		e.preventDefault();
+		if (!confirm("상품 등록을 정말 취소하시겠습니까?\n작성 중인 내용은 저장되지 않습니다.")) { return; }
+		location.href = $(this).data("url");
+	});
+
+	$(".product-register-btn, .product-update-btn").on("click", function(e) {
+		e.preventDefault();
+		const $btn = $(this);
+		const $form = $btn.closest("form");
+		const isUpdate = $btn.data("update");
+		if (!validateProductForm($form, isUpdate)) { return; }
+		$form.submit();
+	});
+})();
 
 
-$fileInput.on("change", function() {
-	const file = $(this)[0].files[0];
-	if (!file) { return; }
-	if (!file.type.startsWith("image/")) {
-		alert("이미지형식만 업로드 가능합니다.");
-		$thumbnail.hide();
-		$(this).val("");
-		return;
-	}
-	const reader = new FileReader();
-	reader.onload = (e) => {
-		$thumbnail.attr("src", e.target.result).show();
-	}
-	reader.readAsDataURL(file);
-});
-
-$("button.product-register-btn").on("click", function(e) {
-	e.preventDefault();
-	const $btn = $(this);
-	if ($btn.prop("disabled")) return;
-	if (!validateProductForm(false)) { return; }
-	$btn.prop("disabled", true);
-	$btn.closest("form").submit();
-});
-
-function validateProductForm(isUpdate = false) {
-	const $productForm = $("form[name=productForm]");
+function validateProductForm($form, isUpdate = false) {
 	if (!isUpdate) {
-		if (!$productForm.find("input[type=file]")[0].files[0]) { alert("이미지를 업로드해 주세요."); return false; }
+		if (!$("input[name=multipartFile]")[0].files[0]) {
+			alert("이미지를 업로드 하세요.");
+			return false;
+		}
 	}
-	if (!$productForm.find("input[name=productTitle]").val()) { alert("제목을 입력해 주세요"); return false; }
-	if (!$productForm.find("input[name=productPrice]").val()) { alert("가격을 입력해 주세요"); return false; }
-	if (!$productForm.find("input[name=productUrl]").val()) { alert("url을 입력해 주세요"); return false; }
-	if (!$productForm.find("select").val()) { alert("카테고리를 선택해 주세요"); return false; }
+	if (!$form.find("input[name=productTitle]").val().trim()) {
+		alert("상품명을 입력하세요.");
+		return false;
+	}
+	if (!$form.find("input[name=productPrice]").val().trim()) {
+		alert("가격을 입력하세요.");
+		return false;
+	}
+	if (!$form.find("input[name=productUrl]").val().trim()) {
+		alert("url을 입력하세요");
+		return false;
+	}
+	if (!$form.find("select[name=productCategory]").val()) {
+		alert("카테고리를 선택하세요");
+		return false;
+	}
 	return true;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

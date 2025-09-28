@@ -96,11 +96,6 @@ public class BoardServiceImpl implements BoardService {
 	}
 
 	@Override
-	public void setBoardRegisterDate(BoardDto boardDto) {
-		boardDto.setBoardRegisterDate(DateUtil.formatDateString(boardDto.getBoardRegisterDate()));
-	}
-
-	@Override
 	public BoardDto findByUserNumAndBoardNum(Long userNum, Long boardNum) {
 		try {
 			return boardDao.findByUserNumAndBoardNum(userNum, boardNum);
@@ -109,6 +104,31 @@ public class BoardServiceImpl implements BoardService {
 			System.out.println("boardService findByUserNumAndBoardNum error");
 			return null;
 		}
+	}
+
+	@Override
+	public List<BoardDto> findByCategoryAndAmount(String category, int amount) {
+		Criteria criteria = new Criteria();
+		criteria.setCategory(category);
+		criteria.setAmount(amount);
+		try {
+			return findByCriteria(criteria);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("boardService findByCategoryAndAmount error");
+			return Collections.emptyList();
+		}
+	}
+
+	@Override
+	public void setBoardRegisterDate(BoardDto boardDto) {
+		boardDto.setBoardRegisterDate(DateUtil.formatDate(boardDto.getBoardRegisterDate()));
+	}
+
+	@Override
+	public void setBoardRegisterDateTime(BoardDto boardDto) {
+		boardDto.setBoardRegisterDate(DateUtil.formatDateTime(boardDto.getBoardRegisterDate()));
+
 	}
 
 }

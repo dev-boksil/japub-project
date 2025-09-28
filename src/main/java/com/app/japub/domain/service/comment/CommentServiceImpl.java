@@ -75,7 +75,8 @@ public class CommentServiceImpl implements CommentService {
 	@Override
 	public int getNextPageCount(Criteria criteria, Long boardNum) {
 		try {
-			return commentDao.getNextPageCount(criteria, boardNum);
+			criteria.setPage(criteria.getPage() + 1);
+			return commentDao.getPageCount(criteria, boardNum);
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("commentService getNextPageCount error");

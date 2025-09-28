@@ -18,7 +18,7 @@ public class FileTask {
 	private static final String PRODUCTS_DIRECTORY = "C:/upload/products";
 	private static final String FILES_DIRECTORY = "C:/upload/files";
 
-	@Scheduled(cron = "0 0 2 * * *")
+	 @Scheduled(cron = "0 0 2 * * *") 
 	/* @Scheduled(cron = "0 * * * * ?") */
 	public void autoDeleteFiles() {
 		System.out.println("cron");

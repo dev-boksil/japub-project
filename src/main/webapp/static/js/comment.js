@@ -1,27 +1,24 @@
-window.boardNum = $("#board-container").data("boardNum");
-let page = 1;
-const $commentUl = $("ul.comment-ul");
-const $updateLi = $("li.update-li");
-const status = { isEditing: false };
 const commentService = (function() {
-	function insert(comment, callback) {
+	function insert(boardNum, comment, callback) {
 		$.ajax({
-			url: `${contextPath}/comments/${comment.boardNum}`,
+			url: `${contextPath}/comments/${boardNum}`,
 			method: 'post',
 			contentType: 'application/json;charset=UTF-8',
 			data: JSON.stringify(comment),
 			success: callback
 		});
 	}
-	function update(comment, callback) {
+
+	function update(commentNum, comment, callback) {
 		$.ajax({
-			url: `${contextPath}/comments/${comment.commentNum}`,
+			url: `${contextPath}/comments/${commentNum}`,
 			method: 'patch',
 			contentType: 'application/json;charset=UTF-8',
 			data: JSON.stringify(comment),
 			success: callback
 		});
 	}
+
 	function remove(commentNum, callback) {
 		$.ajax({
 			url: `${contextPath}/comments/${commentNum}`,
@@ -29,128 +26,135 @@ const commentService = (function() {
 			success: callback
 		});
 	}
-	function getComments(boardNum, page, callback) {
+
+	function getCommentsDto(boardNum, page, callback) {
 		$.ajax({
 			url: `${contextPath}/comments/${boardNum}?page=${page}`,
 			method: 'get',
 			success: callback
 		});
 	}
-	return { insert, update, remove, getComments };
+
+	return { insert, update, remove, getCommentsDto };
 })();
+
 
 (function() {
-	if ($("#board-container").data("boardDetail")) {
-		showComments($commentUl, boardNum, page);
-	}
+	const boardNum = $(".container").data("boardNum");
+	const $updateLi = $(".update-li");
+	const $commentUl = $("ul.comment-ul");
+	const status = { isEditing: false };
+	const { $cancelBtn, $updateDoneBtn, $replyDoneBtn, $updateLiTextarea } = getEleToUpdateLi($updateLi);
+	let page = 1;
+	showComments($commentUl, boardNum, page);
+
+	$(".comment-insert-btn").on("click", function(e) { //등록
+		e.preventDefault();
+		if (!sessionUserNum) { alert("로그인 후 사용하실 수 있습니다."); return; }
+		const $insertTextarea = $(this).closest(".comment-container").find("textarea")
+		const commentContent = $insertTextarea.val().trim();
+		if (!commentContent) { alert("댓글을 입력하세요"); return; }
+		commentService.insert(boardNum, { commentContent }, () => {
+			$insertTextarea.val("");
+			showComments($commentUl, boardNum, page);
+		});
+	});
+
+	$cancelBtn.on("click", function(e) { //취소
+		e.preventDefault();
+		resetUpdateLi($updateLi);
+		status.isEditing = false;
+	});
+
+	$commentUl.on("click", ".comment-remove-btn", function(e) { //삭제
+		e.preventDefault();
+		if (!confirm("정말로 삭제하시겠습니까?")) { return; }
+		const commentNum = $(this).closest("li").data("commentNum");
+		commentService.remove(commentNum, () => showComments($commentUl, boardNum, page));
+	});
+
+	$commentUl.on("click", ".comment-update-btn", function(e) { //수정
+		e.preventDefault();
+		if (status.isEditing) { return; }
+		status.isEditing = true;
+		const $li = $(this).closest("li");
+		$updateLi.data("commentNum", $li.data("commentNum"))
+		const commentContent = $li.find("span.comment-content").text();
+		$updateLiTextarea.val(commentContent);
+		$li.hide().after($updateLi);
+		$updateLi.show();
+	});
+
+	$commentUl.on("click", ".comment-reply-btn", function(e) { //수정
+		e.preventDefault();
+		if (status.isEditing) { return; }
+		status.isEditing = true;
+		const $li = $(this).closest("li");
+		$updateLi.data("parentNum", $li.data("commentNum")).data("parentId", $li.data("userId"));
+		$replyDoneBtn.css("display", "inline-block");
+		$updateDoneBtn.hide();
+		$li.after($updateLi);
+		$updateLi.show();
+	});
+
+	$updateDoneBtn.on("click", function(e) {
+		e.preventDefault();
+		const commentContent = $updateLiTextarea.val().trim();
+		if (!commentContent) { alert("댓글을 입력하세요."); return; }
+		const commentNum = $updateLi.data("commentNum");
+		commentService.update(commentNum, { commentContent }, () => {
+			resetUpdateLi($updateLi);
+			status.isEditing = false;
+			showComments($commentUl, boardNum, page);
+		});
+	});
+
+	$replyDoneBtn.on("click", function(e) {
+		e.preventDefault();
+		const commentContent = $updateLiTextarea.val().trim();
+		if (!commentContent) { alert("댓글을 입력하세요."); return; }
+		const comment = { commentContent, commentParentNum: $updateLi.data("parentNum"), commentParentId: $updateLi.data("parentId") }
+		commentService.insert(boardNum, comment, () => {
+			resetUpdateLi($updateLi);
+			status.isEditing = false;
+			showComments($commentUl, boardNum, page);
+		});
+	});
+
+	$commentUl.on("click", ".comment-more-btn", function(e) {
+		e.preventDefault();
+		showComments($commentUl, boardNum, ++page);
+	});
+
 })();
 
 
-$("a.comment-insert-btn").on("click", function(e) {
-	e.preventDefault();
-	const $textarea = $(this).closest(".comment-input").find("textarea");
-	if (!sessionUserNum) { alert("로그인 후 사용하실 수 있습니다."); $textarea.val(""); return; }
-	const commentContent = $textarea.val().trim();
-	if (!commentContent) { alert("댓글을 입력하세요."); return; }
-	const comment = { boardNum, commentContent };
-	commentService.insert(comment, () => {
-		$textarea.val("");
-		showComments($commentUl, boardNum, page);
-	});
-});
-
-$commentUl.on("click", ".comment-remove-btn", function(e) {
-	e.preventDefault();
-	if (!confirm("정말로 삭제하시겠습니까?")) { return; }
-	const commentNum = $(this).closest("li").data("commentNum");
-	commentService.remove(commentNum, () => showComments($commentUl, boardNum, page));
-});
-
-
-$("a.comment-cancel-btn").on("click", function(e) {
-	e.preventDefault();
-	resetUpdateLi($updateLi);
-	setStatus(false);
-});
-
-$commentUl.on("click", ".comment-update-btn", function(e) {
-	e.preventDefault();
-	if (getStatus()) { return; }
-	setStatus(true);
-	const $li = $(this).closest("li");
-	const $textarea = $updateLi.find("textarea");
-	const commentNum = $li.data("commentNum");
-	const commentContent = $li.find(".comment-content").text();
-	$textarea.val(commentContent);
-	$updateLi.data("commentNum", commentNum).show();
-	$li.hide().after($updateLi);
-});
-
-$commentUl.on("click", ".comment-reply-btn", function(e) {
-	e.preventDefault();
-	if (getStatus()) { return; }
-	setStatus(true);
-	const $li = $(this).closest("li");
-	$updateLi.data("parentId", $li.data("userId")).data("parentNum", $li.data("parentNum")).show();
-	$updateLi.find("a.comment-reply-done").css("display", "inline-block").prev().hide();
-	$li.after($updateLi);
-});
-
-$("a.comment-update-done").on("click", function(e) {
-	e.preventDefault();
-	const $textarea = $updateLi.find("textarea");
-	const commentContent = $textarea.val().trim();
-	if (!commentContent) { alert("댓글을 입력하세요"); return; }
-	const commentNum = $updateLi.data("commentNum");
-	const comment = { commentNum, commentContent };
-	commentService.update(comment, () => {
-		resetUpdateLi($updateLi);
-		setStatus(false);
-		showComments($commentUl, boardNum, page);
-	});
-});
-
-$("a.comment-reply-done").on("click", function(e) {
-	e.preventDefault();
-	const $textarea = $updateLi.find("textarea");
-	const commentContent = $textarea.val().trim();
-	if (!commentContent) { alert("댓글을 입력하세요"); return; }
-	const comment = { commentContent, commentParentNum: $updateLi.data("parentNum"), commentParentId: $updateLi.data("parentId"), boardNum };
-	commentService.insert(comment, () => {
-		resetUpdateLi($updateLi);
-		setStatus(false);
-		showComments($commentUl, boardNum, page);
-	});
-
-});
-
-$commentUl.on("click", ".comment-more-btn", function(e) {
-	e.preventDefault();
-	showComments($commentUl, boardNum, ++page);
-});
 
 function resetUpdateLi($updateLi) {
-	$updateLi.find("textarea").val("");
+	const { $updateDoneBtn, $replyDoneBtn, $updateLiTextarea } = getEleToUpdateLi($updateLi);
+	$updateDoneBtn.css("display", "inline-block");
+	$replyDoneBtn.hide();
+	$updateLiTextarea.val("");
 	$updateLi.prev().show();
-	$updateLi.find("a.comment-update-done").css("display", "inline-block").next().hide();
 	$updateLi.hide().appendTo($("body"));
 }
 
-function showComments($ul, boardNum, page) {
-	commentService.getComments(boardNum, page, commentsDto => appendComments($ul, commentsDto));
+function getEleToUpdateLi($updateLi) {
+	return {
+		$cancelBtn: $updateLi.find(".comment-cancel-btn"),
+		$updateDoneBtn: $updateLi.find(".comment-update-done"),
+		$replyDoneBtn: $updateLi.find(".comment-reply-done"),
+		$updateLiTextarea: $updateLi.find("textarea")
+	}
 }
 
-function getStatus() {
-	return status.isEditing;
+function showComments($commentUl, boardNum, page) {
+	commentService.getCommentsDto(boardNum, page, commentsDto => appendComments($commentUl, commentsDto));
 }
 
-function setStatus(isEditing) {
-	status.isEditing = isEditing;
-}
-
-function appendComments($ul, commentsDto) {
-	let html = createComments(commentsDto);
-	$ul.empty().append(html);
+function appendComments($commentUl, conmentsDto) {
+	const comments = createComments(conmentsDto);
+	$commentUl.empty().append(comments);
 }
 
 function createComments(commentsDto) {
@@ -173,7 +177,7 @@ function createComments(commentsDto) {
 		html += `</div>`;
 		html += `<div class="comment-footer">`;
 		html += `<span>${elapsetTime(comment.commentRegisterDate)}</span>`;
-		html += createButtons(sessionUserNum, isAdmin, comment);
+		html += createCommentBtns(comment, sessionUserNum, isAdmin);
 		html += `</div>`;
 		html += `</section>`;
 		html += `</li>`;
@@ -184,11 +188,12 @@ function createComments(commentsDto) {
 	return html;
 }
 
-function createButtons(sessionUserNum, isAdmin, comment) {
-	const isMycomment = sessionUserNum == comment.userNum;
-	const canReply = sessionUserNum && !isMycomment && (comment.commentParentNum == comment.commentNum);
+function createCommentBtns(comment, sessionUserNum, isAdmin) {
+	if (!sessionUserNum) { return ""; }
+	const isMyComment = comment.userNum == sessionUserNum;
+	const canReply = !isMyComment && (comment.commentParentNum == comment.commentNum);
 	let html = "";
-	if (isAdmin || isMycomment) {
+	if (isAdmin || isMyComment) {
 		html += `<a href="#" class="comment-update-btn">수정</a>`;
 		html += `<a href="#" class="comment-remove-btn">삭제</a>`;
 	}
@@ -198,22 +203,29 @@ function createButtons(sessionUserNum, isAdmin, comment) {
 	return html;
 }
 
-function elapsetTime(date) {
-	const currentDate = new Date();
-	const registerDate = new Date(date);
-	const gap = (currentDate - registerDate) / 1000;
+function elapsetTime(registerDate) {
+	const now = new Date();
+	const date = new Date(registerDate);
+	const gap = (now - date) / 1000;
 	const times = [
 		{ name: "년", milliseconds: 60 * 60 * 24 * 365 },
 		{ name: "개월", milliseconds: 60 * 60 * 24 * 30 },
 		{ name: "일", milliseconds: 60 * 60 * 24 },
 		{ name: "시간", milliseconds: 60 * 60 },
-		{ name: "분", milliseconds: 60 },
-	];
+		{ name: "분", milliseconds: 60 }
+	]
 	for (const time of times) {
-		let result = Math.floor(gap / time.milliseconds);
+		const result = Math.floor(gap / time.milliseconds);
 		if (result > 0) {
 			return `${result}${time.name}전`;
 		}
 	}
-	return "방금전";
+	return `방금전`;
 }
+
+
+
+
+
+
+

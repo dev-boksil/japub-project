@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FileController {
 	private final FileService fileService;
-	private static final String DEFAULT_DIRECTORY = "C:/upload/files";
+	private static final String FILES_DIRECTORY = "C:/upload/files";
 	private static final String DOWNLOAD_DIRECTORY = "C:/upload/download";
 
 	@GetMapping("/display")
@@ -42,7 +42,7 @@ public class FileController {
 		try {
 			String contentType = fileService.getContentType(file);
 			HttpHeaders header = new HttpHeaders();
-			header.add("Content-Type", contentType);
+			header.set(HttpHeaders.CONTENT_TYPE, contentType);
 			byte[] result = FileCopyUtils.copyToByteArray(file);
 			return new ResponseEntity<byte[]>(result, header, HttpStatus.OK);
 		} catch (Exception e) {
@@ -79,30 +79,30 @@ public class FileController {
 
 	@PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<FileDto>> upload(MultipartFile[] multipartFiles, String category) {
-		if (multipartFiles == null) {
-			return ResponseEntity.badRequest().build();
-		}
 		List<FileDto> files = new ArrayList<>();
-		for (MultipartFile multipartFile : multipartFiles) {
-			try {
-				FileDto fileDto = fileService.upload(multipartFile, getDefaultDirectory(category),
-						DateUtil.getDatePath());
-				files.add(fileDto);
-			} catch (Exception e) {
-				e.printStackTrace();
-				continue;
+		if (multipartFiles != null) {
+			String directoryPath = getDefaultDirectory(category);
+			String datePath = DateUtil.getDatePath();
+			for (MultipartFile multipartFile : multipartFiles) {
+				try {
+					FileDto fileDto = fileService.upload(multipartFile, directoryPath, datePath);
+					files.add(fileDto);
+				} catch (Exception e) {
+					e.printStackTrace();
+					continue;
+				}
 			}
 		}
 		return new ResponseEntity<List<FileDto>>(files, HttpStatus.OK);
 	}
 
 	@GetMapping(value = "/count/{boardNum}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public int count(@PathVariable Long boardNum) {
-		return fileService.findByBoardNum(boardNum).size();
+	public ResponseEntity<Integer> getCount(@PathVariable Long boardNum) {
+		return new ResponseEntity<Integer>(fileService.countByBoardNum(boardNum), HttpStatus.OK);
 	}
 
 	private String getDefaultDirectory(String category) {
-		return "download".equals(category) ? DOWNLOAD_DIRECTORY : DEFAULT_DIRECTORY;
+		return "download".equals(category) ? DOWNLOAD_DIRECTORY : FILES_DIRECTORY;
 	}
 
 }

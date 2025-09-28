@@ -23,10 +23,12 @@
 			<h1 class="product-header">상품 등록</h1>
 			<form id="productForm" name="productForm" method="post" enctype="multipart/form-data">
 			<input type="hidden" name="productUuid" value="${product.productUuid}" />
+			<input type="hidden" name="productThumbnailPath" value="${product.productThumbnailPath}" />
+			<input type="hidden" name="productNum" value="${product.productNum}" />
 				<div>
 					<label for="thumbnail">대표이미지</label>
 					<input type="file" id="thumbnail" name="multipartFile" accept="image/*" required />
-					<img id="thumbnailPreview" class="thumbnail-preview" src="<c:url value='/upload/products/${product.productThumbnailUrl}'/>" style="display:block;" alt="미리보기" />
+					<img id="thumbnailPreview" class="thumbnail-preview" src="<c:url value='/upload/products/${product.productThumbnailPath}'/>" style="display:block;" alt="미리보기" />
 				</div>
 	
 				<div>
@@ -54,8 +56,8 @@
 					</select>
 				</div>
 	
-				<button class="product-cancel-btn" type="button" onclick="history.back()">취소하기</button>
-				<button type="submit" class="product-update-btn">등록하기</button>
+				<button class="product-cancel-btn" type="button" data-url='<c:url value="/products/list${criteria.params}" />' >취소하기</button>
+				<button type="submit" class="product-update-btn" data-update="true">등록하기</button>
 			</form>
 		</div>
 	</main>
@@ -70,5 +72,4 @@
 </script>
 <script src="<c:url value='/static/js/script.js' />"></script>
 <script src="<c:url value='/static/js/product-register.js' />"></script>
-<script src="<c:url value='/static/js/product-update.js' />"></script>
 </html>

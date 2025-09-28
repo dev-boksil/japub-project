@@ -30,6 +30,7 @@
       
      <div class="product-search-container">
   		<form name="productSearchForm" method="get" action="<c:url value='/products/list' />">
+  			<input type="hidden" name="category" value="${criteria.category}"  />
     		<input type="text" name="keyword" value="${criteria.keyword}" placeholder="검색어를 입력하세요" />	
     		<button type="submit" class="product-search-btn">검색</button>
   		</form>
@@ -44,23 +45,17 @@
       </div>
 
       <ul class="product-list">
-        <form name="productPostForm" method="post">
-	  	  	 <input type="hidden" name="productNum" value=""/>
-	  	     <input type="hidden" name="page" value="${criteria.page}" />
-       		 <input type="hidden" name="sort" value="${criteria.sort}" />
-       		 <input type="hidden" name="category" value="${criteria.category}" />
-		</form>
         <c:forEach items="${products}" var="product">
           <li class="item" data-product-num="${product.productNum}" data-is-recommend="${product.productIsRecommend}">
           	<c:if test="${sessionScope.isAdmin}">
 		          <div class="item-actions">
-		            <a href="<c:url value='/products/recommend/add' />" class="product-recommend-btn">추천 지정</a>
-		            <a href="<c:url value='/products/update${criteria.productParams}&productNum=${product.productNum}' />" class="product-update-btn">수정</a>
-		            <a href="<c:url value='/products/delete' />" class="product-delete-btn">삭제</a>
+		            <a href="<c:url value='/products/recommend/add${criteria.params}&productNum=${product.productNum}' />" class="product-recommend-btn">추천 지정</a>
+		            <a href="<c:url value='/products/update${criteria.params}&productNum=${product.productNum}' />" class="product-update-btn">수정</a>
+		            <a href="<c:url value='/products/delete${criteria.params}&productNum=${product.productNum}' />" class="product-delete-btn">삭제</a>
 		          </div>
 		    </c:if>
             <a target="_blank" href="${product.productUrl}">
-              <img src="<c:url value='/upload/products/${product.productThumbnailUrl}'/>" alt="${product.productTitle}"/>
+              <img src="<c:url value='/upload/products/${product.productThumbnailPath}'/>" alt="${product.productTitle}"/>
               <div class="title">${product.productTitle}</div>
               <div class="price">        
                 <span class="sale"><fmt:formatNumber value="${product.productDiscountPrice}" pattern="#,###"/>원</span>
@@ -99,7 +94,7 @@
     </div>
 
     <div>
-      <form name="productForm">
+      <form name="productForm" method="get" action="<c:url value='/products/list'/>">
         <input type="hidden" name="page" value="${criteria.page}" />
         <input type="hidden" name="sort" value="${criteria.sort}" />
         <input type="hidden" name="category" value="${criteria.category}" />

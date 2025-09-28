@@ -6,13 +6,23 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class DateUtil {
-	public static String formatDateString(String boardRegisterDate) {
+	public static String formatDateTime(String registerDate) {
 		try {
-			Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(boardRegisterDate);
+			Date date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(registerDate);
 			return new SimpleDateFormat("yy-MM-dd HH:mm").format(date);
 		} catch (ParseException e) {
 			e.printStackTrace();
-			return boardRegisterDate;
+			return registerDate;
+		}
+	}
+
+	public static String formatDate(String registerDate) {
+		try {
+			Date date = new SimpleDateFormat("yyyy-MM-dd").parse(registerDate);
+			return new SimpleDateFormat("yy.MM.dd").format(date).toString();
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return registerDate;
 		}
 	}
 

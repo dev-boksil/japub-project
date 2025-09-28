@@ -21,5 +21,5 @@ public interface CommentMapper {
 	public abstract List<CommentDto> findByCriteriaAndBoardNum(@Param("criteria") Criteria criteria,
 			@Param("boardNum") Long boardNum);
 	
-	public abstract int getNextPageCount(@Param("criteria") Criteria criteria, @Param("boardNum") Long boardNum);
+	public abstract int getPageCount(@Param("criteria") Criteria criteria, @Param("boardNum") Long boardNum);
 }

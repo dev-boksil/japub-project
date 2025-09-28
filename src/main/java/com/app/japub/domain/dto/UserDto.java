@@ -7,6 +7,7 @@ public class UserDto {
 	private Long userNum;
 	private String userId;
 	private String userPassword;
+	private String userPasswordCheck;
 	private String userEmail;
 	private String userZipCode;
 	private String userAddress;

@@ -11,6 +11,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.app.japub.common.MessageConstants;
 import com.app.japub.common.SessionUtil;
+import com.app.japub.common.ViewPathUtil;
 import com.app.japub.domain.dto.UserDto;
 import com.app.japub.domain.service.user.UserService;
 
@@ -21,13 +22,15 @@ import lombok.RequiredArgsConstructor;
 public class LoginController {
 	private final UserService userService;
 	private final HttpSession session;
+	private static final String COOKIE_KEY = "id";
+	private static final String BASE_PATH = "login";
 
 	@GetMapping("/login")
 	public String login() {
-		if (session.getAttribute(SessionUtil.KEY) != null) {
-			return "redirect:/main";
+		if (SessionUtil.isLogin(session)) {
+			return ViewPathUtil.REDIRECT_MAIN;
 		}
-		return "login/login";
+		return ViewPathUtil.getForwardPath(BASE_PATH, BASE_PATH);
 	}
 
 	@PostMapping("/login")
@@ -35,28 +38,27 @@ public class LoginController {
 			RedirectAttributes attributes) {
 		UserDto userDto = userService.login(userId, userPassword);
 		if (userDto == null) {
-			String loginFailedMsg = "아이디 또는 비밀번호가 일치하지 않습니다.";
-			MessageConstants.addErrorMessage(attributes, loginFailedMsg);
-			return "redirect:/login";
+			MessageConstants.addErrorMessage(attributes, MessageConstants.LOGIN_ERROR_MSG);
+			return ViewPathUtil.REDIRECT_LOGIN;
 		}
-		SessionUtil.addUserNumInSession(session, userDto);
-		SessionUtil.addIsAdminInSession(session, userDto);
+		SessionUtil.addUserNumToSession(session, userDto);
+		SessionUtil.addIsAdminToSession(session, userDto);
 		setCookie(rememberId, userId, resp);
-		return "redirect:/main";
+		return ViewPathUtil.REDIRECT_MAIN;
 	}
 
 	@GetMapping("/logout")
 	public String logout() {
-		if (session.getAttribute(SessionUtil.KEY) != null) {
+		if (SessionUtil.isLogin(session)) {
 			session.invalidate();
 		}
-		return "redirect:/login";
+		return ViewPathUtil.REDIRECT_LOGIN;
 	}
 
-	public void setCookie(boolean rememberId, String userId, HttpServletResponse resp) {
-		Cookie cookie = new Cookie("id", rememberId ? userId : "");
+	private void setCookie(boolean rememberId, String userId, HttpServletResponse resp) {
+		Cookie cookie = new Cookie(COOKIE_KEY, rememberId ? userId : "");
 		cookie.setPath("/");
-		cookie.setMaxAge(rememberId ? 60 * 60 * 24 * 7 : 0);
+		cookie.setMaxAge(rememberId ? 60 * 60 * 24 * 15 : 0);
 		resp.addCookie(cookie);
 	}
 

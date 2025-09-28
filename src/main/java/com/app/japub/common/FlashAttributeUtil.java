@@ -3,7 +3,7 @@ package com.app.japub.common;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-public class KeyUtil {
+public class FlashAttributeUtil {
 	public static final String SUCCESS_KEY = "success";
 	public static final String SUCCESS_VALUE = "success";
 

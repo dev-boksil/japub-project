@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -96,25 +97,35 @@ public class FileServiceImpl implements FileService {
 	public String getContentType(File file) {
 		try {
 			String contentType = Files.probeContentType(file.toPath());
+
+			if (contentType != null && !contentType.startsWith("image/")) {
+				throw new RuntimeException("not image Type");
+			}
+
 			if (contentType == null) {
 				String fileName = file.getName().toLowerCase();
-				if (!fileName.contains(".")) {
+				int dot = fileName.lastIndexOf(".");
+
+				if (dot <= 0 || dot == fileName.length() - 1) {
 					throw new RuntimeException("파일 확장자가 존재하지 않습니다.");
-				} else if (fileName.endsWith(".jpg")) {
+				}
+
+				String extension = fileName.substring(dot + 1);
+
+				if (extension.equals("jpg")) {
 					contentType = "image/jpeg";
-				} else if (fileName.endsWith(".jpeg")) {
+				} else if (extension.equals("jpeg")) {
 					contentType = "image/jpeg";
-				} else if (fileName.endsWith(".gif")) {
-					contentType = "image/gif";
-				} else if (fileName.endsWith(".png")) {
+				} else if (extension.equals("png")) {
 					contentType = "image/png";
+				} else if (extension.equals("gif")) {
+					contentType = "image/gif";
 				} else {
 					throw new RuntimeException("지원하지 않는 파일 형식입니다.");
 				}
 			}
 			return contentType;
 		} catch (IOException e) {
-			e.printStackTrace();
 			throw new RuntimeException("fileService getContentType error", e);
 		}
 	}
@@ -131,11 +142,11 @@ public class FileServiceImpl implements FileService {
 	}
 
 	@Override
-	public FileDto upload(MultipartFile multipartFile, String defaultDirectory, String datePath) {
-		File uploadPath = getUploadPath(defaultDirectory, datePath);
+	public FileDto upload(MultipartFile multipartFile, String directoryPath, String datePath) {
 		String fileUuid = UUID.randomUUID().toString();
 		String originalFileName = multipartFile.getOriginalFilename();
 		String fileName = fileUuid + "_" + originalFileName;
+		File uploadPath = getUploadPath(directoryPath, datePath);
 		File file = new File(uploadPath, fileName);
 		try {
 			multipartFile.transferTo(file);
@@ -146,34 +157,40 @@ public class FileServiceImpl implements FileService {
 			fileDto.setFileUploadPath(datePath);
 			if (isImage(file)) {
 				fileDto.setFileType(true);
-				File thumbnailFile = new File(uploadPath, "t_" + fileName);
-				createThumbnails(file, thumbnailFile, THUMBNAIL_SIZE);
+				createThumbnails(file, new File(uploadPath, "t_" + fileName), THUMBNAIL_SIZE);
 			}
 			return fileDto;
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new RuntimeException("fileService upload error");
+			throw new RuntimeException("fileService upload error",e);
 		}
 	}
 
 	@Override
-	public void autoDeleteFiles(List<FileDto> yesterDayFiles, String defaultDirectory, String yesterDayPath) {
+	public void autoDeleteFiles(List<FileDto> yesterDayFiles, String directoryPath, String yesterdayPath) {
 		List<Path> paths = new ArrayList<>();
-		yesterDayFiles.stream().map(file -> Paths.get(defaultDirectory, getThumbnailPath(file).replace("t_", "")))
+		yesterDayFiles.stream().map(file -> Paths.get(directoryPath, getFileThumbnailPath(file).replace("t_", "")))
 				.forEach(paths::add);
-		yesterDayFiles.stream().map(file -> Paths.get(defaultDirectory, getThumbnailPath(file))).forEach(paths::add);
-		Stream.of(new File(defaultDirectory, yesterDayPath).listFiles()).filter(file -> !paths.contains(file.toPath()))
-				.forEach(File::delete);
+		yesterDayFiles.stream().map(file -> Paths.get(directoryPath, getFileThumbnailPath(file))).forEach(paths::add);
+		File dir = new File(directoryPath, yesterdayPath);
+		File[] files = dir.listFiles();
+		files = files == null ? new File[0] : files;
+		Arrays.stream(files).filter(file -> !paths.contains(file.toPath())).forEach(File::delete);
 	}
 
 	@Override
-	public String getThumbnailPath(FileDto fileDto) {
+	public String getFilePath(FileDto fileDto) {
+		return getFileThumbnailPath(fileDto).replace("t_", "");
+	}
+
+	@Override
+	public String getFileThumbnailPath(FileDto fileDto) {
 		return fileDto.getFileUploadPath() + "/" + "t_" + fileDto.getFileUuid() + "_" + fileDto.getFileName();
 	}
 
 	@Override
 	public void setFilePath(FileDto fileDto) {
-		fileDto.setFilePath(getThumbnailPath(fileDto).replace("t_", ""));
+		fileDto.setFilePath(getFilePath(fileDto));
 	}
 
 	@Override
@@ -187,5 +204,16 @@ public class FileServiceImpl implements FileService {
 		}
 	}
 
+	@Override
+	public int countByBoardNum(Long boardNum) {
+		try {
+			return fileDao.countByBoardNum(boardNum);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("fileService countByBoardNum error");
+			return 0;
+		}
+
+	}
 
 }

@@ -34,12 +34,7 @@ public class Criteria {
 
 	public String getParams() {
 		return UriComponentsBuilder.newInstance().queryParam("page", page).queryParam("type", type)
-				.queryParam("keyword", keyword).queryParam("category", category).toUriString();
-	}
-
-	public String getProductParams() {
-		return UriComponentsBuilder.newInstance().queryParam("page", page).queryParam("category", category)
-				.queryParam("sort", sort).toUriString();
+				.queryParam("keyword", keyword).queryParam("category", category).queryParam("sort", sort).toUriString();
 	}
 
 }

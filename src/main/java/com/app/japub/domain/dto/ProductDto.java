@@ -15,6 +15,6 @@ public class ProductDto {
 	private String productCategory;
 	private String productRegisterDate;
 	private String productUpdateDate;
-	private String productThumbnailUrl;
+	private String productThumbnailPath;
 	private boolean productIsRecommend;
 }

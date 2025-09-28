@@ -32,7 +32,7 @@
 		LIMIT 0, #{criteria.endRow}
 	</select>
 	
-	<select id="getNextPageCount" resultType="_int">
+	<select id="getPageCount" resultType="_int">
 			SELECT count(comment_num) FROM
 		(
 			SELECT comment_num, IFNULL(comment_parent_num, comment_num) comment_parent_num, comment_parent_id, comment_content, comment_register_date, comment_update_date, user_num, board_num
