@@ -1,33 +1,87 @@
-const $passwordInput = $("input[name=userPassword]");
-const $confirmPasswordInput = $("input[name=userPasswordCheck]");
-let password = "";
 
-$("input.changePwBtn").on("click", function(e) {
-	e.preventDefault();
-	$("input.cancelChangePwBtn").show();
-	$(this).hide().next().show();
-	password = $passwordInput.val();
-	$confirmPasswordInput.attr("type", "password");
-	$passwordInput.prop("readonly", false).val("").focus();
-});
+(function() {
+	const $passwordInput = $("input[name=userPassword]");
+	const $passwordCheckInput = $("input[name=userPasswordCheck]");
+	const $changeEditBtn = $(".changePwBtn");
+	const $cancelBtn = $(".cancelChangePwBtn");
+	const $changeSaveBtn = $(".changePwOkbtn");
+	let password = "";
 
-$("input.cancelChangePwBtn").on("click", function(e) {
-	e.preventDefault();
-	$(this).hide();
-	$("input.changePwBtn").show().next().hide();
-	$passwordInput.prop("readonly", true).val(password);
-	password = "";
-	$confirmPasswordInput.val("").attr("type", "hidden");
-	changeCss($passwordInput, true);
-	changeCss($confirmPasswordInput, true);
-	resetPasswordCheck($passwordInput, $confirmPasswordInput);
-});
+	$changeEditBtn.on("click", function(e) {
+		e.preventDefault();
+		$changeEditBtn.hide();
+		$changeSaveBtn.show();
+		$cancelBtn.show();
+		password = $passwordInput.val().trim();
+		$passwordCheckInput.attr("type", "password");
+		$passwordInput.prop("readonly", false).val("").focus();
+	});
 
-$("input.changePwOkbtn").on("click", function(e) {
-	e.preventDefault();
-	const { userPassword, userPasswordCheck } = getPasswordChecks();
-	if (!emptyCheck()) { return; }
-	if (!userPassword || !userPasswordCheck) { alert("모든 항목을 정확히 입력하세요"); return; }
-	$(this).closest("form").submit();
-});
+	$changeSaveBtn.on("click", function(e) {
+		e.preventDefault();
+		if (!emptyCheck()) { return; }
+		const { userPassword, userPasswordCheck } = validationChecks;
+		if (!userPassword || !userPasswordCheck) { alert("모든 항목을 정확히 입력하세요."); return; }
+		$(this).closest("form").submit();
+	});
+
+	$cancelBtn.on("click", function(e) {
+		e.preventDefault();
+		$cancelBtn.hide();
+		$changeEditBtn.show();
+		$changeSaveBtn.hide();
+		$passwordInput.val(password).prop("readonly", true);
+		$passwordCheckInput.attr("type", "hidden").val("");
+		changeCss($passwordInput, true);
+		changeCss($passwordCheckInput, true);
+		setValidationCheck($passwordInput, false);
+		setValidationCheck($passwordCheckInput, false);
+	});
+})();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -88,7 +88,7 @@
 								board_content like concat('%',#{keyword},'%')
 							</when>
 							<when test="type == 'I'.toString()">
-								user_id like concat('%',#{keyword},'%')
+								user_id = #{keyword}
 							</when>
 						</choose>
 					</trim>

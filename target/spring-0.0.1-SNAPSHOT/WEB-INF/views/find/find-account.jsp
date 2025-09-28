@@ -48,7 +48,7 @@
       </div>
 
       <div class="find-footer">
-        <a href="<c:url value='/user/login' />" class="find-btn">취소</a>
+        <a href="<c:url value='/login' />" class="find-btn">취소</a>
         <a href="" class="find-btn find-btn-right">찾기</a>
       </div>
     </div>

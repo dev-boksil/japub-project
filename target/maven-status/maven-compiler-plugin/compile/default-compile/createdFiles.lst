@@ -1,6 +1,6 @@
 com\app\japub\domain\service\board\BoardServiceImpl.class
+com\app\japub\common\FlashAttributeUtil.class
 com\app\japub\domain\service\product\ProductServiceImpl.class
-com\app\japub\common\KeyUtil.class
 com\app\japub\controller\FindAccountController.class
 com\app\japub\domain\dao\board\BoardDao.class
 com\app\japub\domain\mapper\ProductMapper.class
@@ -26,6 +26,7 @@ com\app\japub\domain\service\user\MailServiceImpl.class
 com\app\japub\controller\FileController.class
 com\app\japub\domain\dao\comment\CommentDao.class
 com\app\japub\domain\service\board\BoardService.class
+com\app\japub\controller\ErrorControllerAdvice.class
 com\app\japub\domain\dto\PageDto.class
 com\app\japub\domain\service\product\ProductService.class
 com\app\japub\domain\dto\CommentsDto.class
@@ -39,7 +40,6 @@ com\app\japub\domain\dao\admin\AdminDaoImpl.class
 com\app\japub\domain\service\user\PasswordService.class
 com\app\japub\controller\CommentController.class
 com\app\japub\domain\dao\product\ProductDao.class
-com\app\japub\controller\HttpErrorController.class
 com\app\japub\common\DbConstants.class
 com\app\japub\domain\dao\user\UserDao.class
 com\app\japub\domain\dto\BoardDto.class

@@ -68,7 +68,7 @@
 				            <div class="link-box">
 								<p>아이콘을 클릭하시면 관련 페이지로 이동합니다. ☞</p>
 								<a href="${board.boardLinkUrl}" target="_blank" class="board-link-url">
-									<img src="<c:url value='/static/images/news.png' />" width="100" />
+									<img src="<c:url value='/static/images/file/news.png' />" width="100" />
 								</a>
 							</div>
 						</c:if>

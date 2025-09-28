@@ -52,9 +52,9 @@
 	<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
 	
 	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
-	    <property name="maxUploadSize" value="209715200" />
-	    <property name="maxUploadSizePerFile" value="209715200" />
-	    <property name="maxInMemorySize" value="10485760" /> 
+	    <property name="maxUploadSize" value="734003200" />
+	    <property name="maxUploadSizePerFile" value="734003200" />
+	    <property name="maxInMemorySize" value="1048576" /> 
 	</bean>
 	
 	

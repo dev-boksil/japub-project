@@ -21,12 +21,7 @@
 		product_register_date, product_update_date, product_is_recommend
 		FROM tbl_product 
 		<where> 
-			<if test="category != null and category != ''">
-				product_category = #{category}
-			</if>
-			<if test="keyword != null and keyword != ''">
-				and product_title like concat('%',#{keyword},'%')
-			</if>
+			<include refid="search"/>
 		</where>
 		 <include refid="sort"/>
 		LIMIT #{offset}, #{amount}
@@ -35,13 +30,8 @@
 	<select id="countByCriteria" resultType="long">
 		SELECT count(product_num) FROM tbl_product
 		<where>
-			<if test="category != null and category != ''">
-				product_category = #{category}
-			</if>
-			<if test="keyword != null and keyword != ''">
-				and product_title like concat('%',#{keyword},'%')
-			</if>
-		</where> 
+			<include refid="search"/>
+		</where>
 	</select>
 	
 	<select id="findByProductIsRecommend" resultType="productDto">
@@ -84,8 +74,16 @@
 		SELECT * FROM tbl_product WHERE product_upload_path  = DATE_FORMAT(current_timestamp  - INTERVAL 1 DAY, '%Y/%m/%d')
 	</select>
 	
+	<sql id="search">
+		<if test="category != null and category != ''">
+			product_category = #{category} 
+		</if>
+		<if test="keyword != null and keyword != ''">
+			and product_title like concat('%',#{keyword},'%')
+		</if>
+	</sql>
+	
 	<sql id="sort">
-		<if test="sort != null and sort != ''">
 			<choose>
 				<when test="sort == 'recent'.toString()">
 					ORDER BY product_num DESC
@@ -96,8 +94,10 @@
 				<when test="sort == 'high_price'.toString()">
 					ORDER BY product_price desc, product_num DESC
 				</when>
+				<otherwise>
+					ORDER BY product_num DESC
+				</otherwise>
 			</choose>
-		</if>
 	</sql>
 	
 	

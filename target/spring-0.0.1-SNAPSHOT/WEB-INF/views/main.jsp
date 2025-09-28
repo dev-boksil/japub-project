@@ -56,7 +56,7 @@
           		
             		<div class="swiper-slide">
             			<a target="_blank" href="${newProduct.productUrl}">
-            				<img src="<c:url value='/upload/products/${newProduct.productThumbnailUrl}'/>"  width="100%"/>
+            				<img src="<c:url value='/upload/products/${newProduct.productThumbnailPath}'/>"  width="100%"/>
             			</a>
             		</div>
             </c:forEach>
@@ -88,7 +88,7 @@
 		          		</div>
 	          		</c:if>
 	          		<a href="${recommendProduct.productUrl}">
-            			<img src="<c:url value='/upload/products/${recommendProduct.productThumbnailUrl}' />" data-file-num="${recommendProduct.productNum}" width="100%"  />
+            			<img src="<c:url value='/upload/products/${recommendProduct.productThumbnailPath}' />" data-file-num="${recommendProduct.productNum}" width="100%"  />
             		</a>
             	</div>
             </c:forEach>

@@ -53,8 +53,10 @@
 		        </div>   
             </div>   
         </form>
-       
     </main>
+    <div class="dimmed-container" role="status" aria-live="polite" aria-busy="true">
+	    <img class="dimmed" src="<c:url value='/static/images/file/dimmed.svg'/>" alt="loading">
+	</div>
     <jsp:include page="/WEB-INF/views/layout/footer.jsp" />
 </body>
 <script src="https://code.jquery.com/jquery-3.7.1.js"></script>

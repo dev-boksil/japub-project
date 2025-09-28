@@ -29,26 +29,26 @@
 	
 				<div>
 					<label for="title">제목</label>
-					<input type="text" id="title" name="productTitle" placeholder="상품명 입력" maxlength="50" required />
+					<input type="text" id="title" name="productTitle" placeholder="상품명 입력" maxlength="50" value="${product.productTitle}" required />
 				</div>
 	
 				<div>
 					<label for="price">가격 (원)</label>
-					<input type="number" id="price" name="productPrice" min="0" placeholder="가격 입력" required />
+					<input type="number" id="price" name="productPrice" min="0" placeholder="가격 입력" value="${product.productPrice}" required />
 				</div>
 	
 				<div>
 					<label for="url">클릭 시 이동 URL</label>
-					<input type="url" id="url" name="productUrl" placeholder="https://example.com" required />
+					<input type="url" id="url" name="productUrl" placeholder="https://example.com" value="${product.productUrl}" required />
 				</div>
 	
 				<div>
 					<label for="category">카테고리</label>
 					<select id="category" name="productCategory" required>
-						<option value="" disabled selected>카테고리 선택</option>
-						<option value="중앙경제평론사">중앙경제평론사</option>
-						<option value="중앙생활사">중앙생활사</option>
-						<option value="중앙에듀북스">중앙에듀북스</option>
+						<option value="" ${product.productCategory == null? 'selected' : ''}>카테고리 선택</option>
+						<option value="중앙경제평론사" ${product.productCategory == '중앙경제평론사' ? 'selected' : ''}>중앙경제평론사</option>
+						<option value="중앙생활사" ${product.productCategory == '중앙생활사' ? 'selected' : ''}>중앙생활사</option>
+						<option value="중앙에듀북스" ${product.productCategory == '중앙에듀북스' ? 'selected' : ''}>중앙에듀북스</option>
 					</select>
 				</div>
 				
@@ -59,7 +59,7 @@
 						<option value="true">추천 도서로 설정합니다.</option>
 					</select>
 				</div> -->
-				<button class="product-cancel-btn" type="button" onclick="history.back()">취소하기</button>
+				<button class="product-cancel-btn" type="button" data-url='<c:url value="/products/list${criteria.params}" />' >취소하기</button>
 				<button type="button" class="product-register-btn">등록하기</button>
 			</form>
 		</div>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 38 38" aria-label="loading">
+  <g fill="none" fill-rule="evenodd" stroke-width="3">
+    <circle cx="19" cy="19" r="18" stroke="#D9D9D9" stroke-opacity=".6"/>
+    <path d="M37 19c0-9.94-8.06-18-18-18" stroke="#2A7" stroke-linecap="round">
+      <animateTransform attributeName="transform" type="rotate" from="0 19 19" to="360 19 19" dur="0.9s" repeatCount="indefinite"/>
+    </path>
+  </g>
+</svg>
