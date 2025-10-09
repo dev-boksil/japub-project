@@ -49,8 +49,8 @@ public class MypageController {
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		userDto = userService.findByUserNumAndUserPassword(userNum, userPassword);
-		if (userDto == null) {
+		boolean isSuccess = userService.findByUserNumAndUserPassword(userNum, userPassword) != null;
+		if (!isSuccess) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.WRONG_PASSWORD_MSG);
 			addDeleteToAttribute(parseBoolean(isDelete), attributes);
 			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
@@ -101,10 +101,9 @@ public class MypageController {
 			FlashAttributeUtil.addSuccessToFlash(attributes);
 			return ViewPathUtil.getRedirectPath(null, BASE_PATH, isDelete ? DELETE_PATH : UPDATE_PATH);
 		}
-
+		session.invalidate();
 		MessageConstants.addSuccessMessage(attributes,
 				isDelete ? MessageConstants.DELETE_ACCOUNT_MSG : MessageConstants.PASSWORD_UPDATE_SUCCESS_MESSAGE);
-		session.invalidate();
 		return ViewPathUtil.REDIRECT_LOGIN;
 	}
 
@@ -130,6 +129,7 @@ public class MypageController {
 
 	private String redirectIfUserNotFound(UserDto userDto, RedirectAttributes attributes) {
 		if (userDto == null) {
+			session.invalidate();
 			MessageConstants.addErrorMessage(attributes, MessageConstants.USER_NOT_FOUND_MSG);
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
@@ -143,7 +143,5 @@ public class MypageController {
 	private boolean parseBoolean(String isDelete) {
 		return "true".equalsIgnoreCase(isDelete);
 	}
-
-
 
 }

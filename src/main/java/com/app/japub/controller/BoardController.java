@@ -158,8 +158,12 @@ public class BoardController {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 		Long boardNum = boardDto.getBoardNum();
+		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
+		if (redirectPath != null) {
+			return redirectPath;
+		}
 		BoardDto boardToValidate = boardService.findByBoardNum(boardNum);
-		String redirectPath = redirectIfBoardNotFound(boardToValidate, criteria, attributes);
+		redirectPath = redirectIfBoardNotFound(boardToValidate, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}

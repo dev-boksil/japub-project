@@ -93,8 +93,8 @@
 	</error-page>
 
 	<error-page>
-		<error-code>415</error-code>
-		<location>/error/415</location>
+		<error-code>413</error-code>
+		<location>/error/413</location>
 	</error-page>
 
 	<error-page>
@@ -107,4 +107,8 @@
 		<location>/error/401</location>
 	</error-page>
 
+	<error-page>
+		<error-code>503</error-code>
+		<location>/error/503</location>
+	</error-page>
 </web-app>

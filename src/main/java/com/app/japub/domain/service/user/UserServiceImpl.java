@@ -70,7 +70,6 @@ public class UserServiceImpl implements UserService {
 			return userDao.update(userDto) == DbConstants.SUCCESS_CODE;
 		} catch (Exception e) {
 			e.printStackTrace();
-			e.printStackTrace();
 			System.out.println("userService update error");
 			return false;
 		}

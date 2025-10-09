@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.app.japub.common.DbConstants;
@@ -45,12 +46,12 @@ public class FileServiceImpl implements FileService {
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void insertFiles(BoardDto boardDto) {
-		List<FileDto> insertFiles = boardDto.getInsertFiles();
+		List<FileDto> insertFiles = boardDto.getDeleteFiles();
 		if (insertFiles == null || insertFiles.isEmpty()) {
 			return;
 		}
-
 		for (FileDto insertFile : insertFiles) {
 			insertFile.setBoardNum(boardDto.getBoardNum());
 			if (fileDao.insert(insertFile) != DbConstants.SUCCESS_CODE) {
@@ -60,12 +61,12 @@ public class FileServiceImpl implements FileService {
 	}
 
 	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public void deleteFiles(BoardDto boardDto) {
 		List<FileDto> deleteFiles = boardDto.getDeleteFiles();
 		if (deleteFiles == null || deleteFiles.isEmpty()) {
 			return;
 		}
-
 		for (FileDto deleteFile : deleteFiles) {
 			if (fileDao.deleteByFileNum(deleteFile.getFileNum()) != DbConstants.SUCCESS_CODE) {
 				throw new RuntimeException("fileService deleteFiles error");
@@ -162,7 +163,7 @@ public class FileServiceImpl implements FileService {
 			return fileDto;
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new RuntimeException("fileService upload error",e);
+			throw new RuntimeException("fileService upload error", e);
 		}
 	}
 

@@ -4,12 +4,15 @@ let fileTotalSize = 0;
 const fileService = (function() {
 
 	function upload(formData, category, callback) {
+		const $dimmedImg = $(".dimmed-container");
 		$.ajax({
 			url: `${contextPath}/files/upload?category=${category}`,
 			method: 'post',
 			contentType: false,
 			processData: false,
 			data: formData,
+			beforeSend() { $dimmedImg.show(); },
+			complete() { $dimmedImg.hide(); },   // ← 성공/실패 모두에서 닫기
 			success: callback,
 		});
 	}
@@ -47,7 +50,6 @@ const fileService = (function() {
 		const formData = new FormData();
 		const maxCount = 2;
 		const category = getCategory();
-		const bigSize = 1034 * 1024 * 400;
 		let totalCount = 0;
 		totalCount = totalCount + fileArray.length + files.length + removeCount;
 		if (boardNum) { fileService.getFileCount(boardNum, count => totalCount += count); }
@@ -60,7 +62,6 @@ const fileService = (function() {
 			if ("download" != category && !isImage(file.type)) { alert("이미지 형식만 업로드 가능합니다."); return; }
 			if (!validateFileName(file.name)) { alert("업로드 가능한 파일 형식이 아닙니다."); return; }
 			if (!validateFileSize(file.size)) { alert("업로드 가능한 용량을 초과 하였습니다."); return; }
-			if (file.size > bigSize) { alert("파일을 업로드하고 있습니다.\n완료 아이콘이 표시될 때까지 잠시만 기다려 주세요.\n페이지를 새로고침하거나 창을 닫지 마세요."); }
 			formData.append("multipartFiles", file);
 			fileArray.push(file);
 			fileSizeArray.push(file.size);
