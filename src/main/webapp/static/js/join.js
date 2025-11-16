@@ -8,23 +8,25 @@ const validationChecks =
 }
 const joinService = (function() {
 
-	function checkId(id, callback) {
+	function checkId(id, successCallback, errorCallback) {
 		$.ajax({
 			url: `${contextPath}/join/checkId`,
 			method: 'post',
 			contentType: 'application/json;charset=UTF-8',
 			data: JSON.stringify(id),
-			success: callback
+			success: successCallback,
+			error: errorCallback
 		});
 	}
 
-	function checkEmail(email, callback) {
+	function checkEmail(email, successCallback, errorCallback) {
 		$.ajax({
 			url: `${contextPath}/join/checkEmail`,
 			method: 'post',
 			contentType: 'application/json;charset=UTF-8',
 			data: JSON.stringify(email),
-			success: callback
+			success: successCallback,
+			error: errorCallback
 		});
 	}
 
@@ -89,11 +91,11 @@ function sample6_execDaumPostcode() {
 		changeCss($input, isSuccess, msg);
 		setValidationCheck($input, validationChecks, isSuccess);
 		if (!isSuccess) { return; }
-		joinService.checkId({ userId }, (isSuccess) => {
-			const msg = isSuccess ? "" : "중복된 아이디 입니다.";
-			changeCss($input, isSuccess, msg);
-			setValidationCheck($input, validationChecks, isSuccess);
-		});
+		joinService.checkId(
+			{ userId },
+			isSuccess => successCallback($input, isSuccess, "중복된 아이디 입니다."),
+			xhr => errorCallback(xhr, $input, "아이디가 입력되지 않았습니다. 입력 후 다시 시도해 주세요.")
+		);
 	});
 
 	$("input[name=userEmail]").on("blur", function(e) {
@@ -105,11 +107,11 @@ function sample6_execDaumPostcode() {
 		changeCss($input, isSuccess, msg);
 		setValidationCheck($input, validationChecks, isSuccess);
 		if (!isSuccess) { return; }
-		joinService.checkEmail({ userEmail }, (isSuccess) => {
-			const msg = isSuccess ? "" : "중복된 이메일 입니다.";
-			changeCss($input, isSuccess, msg);
-			setValidationCheck($input, validationChecks, isSuccess);
-		});
+		joinService.checkEmail(
+			{ userEmail },
+			isSuccess => successCallback($input, isSuccess, "중복된 이메일 입니다."),
+			xhr => errorCallback(xhr, $input, "이메일이 입력되지 않았습니다. 입력 후 다시 시도해 주세요.")
+		);
 	});
 
 	$passwordInput.on("blur", function() {
@@ -150,6 +152,17 @@ function sample6_execDaumPostcode() {
 		$(this).closest("form").submit();
 	});
 })();
+
+function successCallback($input, isSuccess, errorMsg) {
+	changeCss($input, isSuccess, isSuccess ? "" : errorMsg);
+	setValidationCheck($input, isSuccess);
+}
+
+function errorCallback(xhr, $input, errorMsg) {
+	errorMsg = xhr.status == 400 ? errorMsg : "요청을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+	changeCss($input, false, errorMsg);
+	setValidationCheck($input, false);
+}
 
 function setValidationCheck($input, isSuccess) {
 	const name = $input.attr("name");

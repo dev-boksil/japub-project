@@ -41,14 +41,14 @@ public class FindAccountController {
 	public ResponseEntity<String> findAccount(@RequestBody UserDto userDto) {
 		String email = userDto.getUserEmail();
 		if (email == null) {
-			return new ResponseEntity<String>(MessageConstants.ERROR_MSG, HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<String>("이메일이 입력되지 않았습니다 입력 후 다시 시도해 주세요.", HttpStatus.BAD_REQUEST);
 		}
-		UserDto userToValidate = userService.findByUserEmail(userDto.getUserEmail());
-		if (userToValidate == null) {
+		UserDto dbUser = userService.findByUserEmail(userDto.getUserEmail());
+		if (dbUser == null) {
 			return new ResponseEntity<String>(MessageConstants.USER_NOT_FOUND_MSG, HttpStatus.NOT_FOUND);
 		}
 		try {
-			userService.setUserPasswordAndSendMail(userToValidate);
+			userService.setUserPasswordAndSendMail(dbUser);
 			return new ResponseEntity<String>("입력하신 이메일로 아이디와 임시 비밀번호를 전송하였습니다.", HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<String>("메일 전송중 오류가 발생하였습니다 잠시후 다시 시도해 주세요.", HttpStatus.INTERNAL_SERVER_ERROR);

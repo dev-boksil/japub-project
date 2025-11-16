@@ -44,19 +44,23 @@ public class MypageController {
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
+
+		boolean isSuccess = userService.findByUserNumAndUserPassword(userNum, userPassword) != null;
+		if (isSuccess) {
+			FlashAttributeUtil.addSuccessToFlash(attributes);
+			return ViewPathUtil.getRedirectPath(null, BASE_PATH, parseBoolean(isDelete) ? DELETE_PATH : UPDATE_PATH);
+		}
+
 		UserDto userDto = userService.findByUserNum(userNum);
 		String redirectPath = redirectIfUserNotFound(userDto, attributes);
+
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		boolean isSuccess = userService.findByUserNumAndUserPassword(userNum, userPassword) != null;
-		if (!isSuccess) {
-			MessageConstants.addErrorMessage(attributes, MessageConstants.WRONG_PASSWORD_MSG);
-			addDeleteToAttribute(parseBoolean(isDelete), attributes);
-			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
-		}
-		FlashAttributeUtil.addSuccessToFlash(attributes);
-		return ViewPathUtil.getRedirectPath(null, BASE_PATH, parseBoolean(isDelete) ? DELETE_PATH : UPDATE_PATH);
+
+		MessageConstants.addErrorMessage(attributes, MessageConstants.WRONG_PASSWORD_MSG);
+		addDeleteToAttribute(parseBoolean(isDelete), attributes);
+		return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
 	}
 
 	@GetMapping("/update")
@@ -84,44 +88,58 @@ public class MypageController {
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
+
 		if (!SessionUtil.isSuccess(session)) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
 			addDeleteToAttribute(isDelete, attributes);
 			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
 		}
+
 		if (!userNum.equals(userDto.getUserNum())) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.PERMISSION_NOT_ALLOW_MSG);
 			addDeleteToAttribute(isDelete, attributes);
 			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
 		}
-		userDto.setUserNum(userNum);
+
 		boolean isSuccess = isDelete ? userService.delete(userNum) : userService.update(userDto);
-		if (!isSuccess) {
-			MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
-			FlashAttributeUtil.addSuccessToFlash(attributes);
-			return ViewPathUtil.getRedirectPath(null, BASE_PATH, isDelete ? DELETE_PATH : UPDATE_PATH);
+
+		if (isSuccess) {
+			session.invalidate();
+			MessageConstants.addSuccessMessage(attributes,
+					isDelete ? MessageConstants.DELETE_ACCOUNT_MSG : MessageConstants.PASSWORD_UPDATE_SUCCESS_MESSAGE);
+			return ViewPathUtil.REDIRECT_LOGIN;
 		}
-		session.invalidate();
-		MessageConstants.addSuccessMessage(attributes,
-				isDelete ? MessageConstants.DELETE_ACCOUNT_MSG : MessageConstants.PASSWORD_UPDATE_SUCCESS_MESSAGE);
-		return ViewPathUtil.REDIRECT_LOGIN;
+
+		String redirectPath = redirectIfUserNotFound(userDto, attributes);
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
+		MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
+		addDeleteToAttribute(isDelete, attributes);
+		return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
 	}
 
 	private String getUpdateOrDeleteView(RedirectAttributes attributes, Model model, boolean isDelete) {
 		Long userNum = SessionUtil.getSessionNum(session);
+		
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
+		
 		if (!FlashAttributeUtil.isSuccess(model)) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
 			addDeleteToAttribute(isDelete, attributes);
 			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
 		}
+		
 		UserDto userDto = userService.findByUserNum(userNum);
 		String redirectPath = redirectIfUserNotFound(userDto, attributes);
+		
 		if (redirectPath != null) {
 			return redirectPath;
 		}
+		
 		model.addAttribute(KEY_USER, userDto);
 		SessionUtil.addSuccess(session);
 		return ViewPathUtil.getForwardPath(BASE_PATH, isDelete ? DELETE_PATH : UPDATE_PATH);

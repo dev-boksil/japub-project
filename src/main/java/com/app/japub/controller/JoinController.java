@@ -82,13 +82,21 @@ public class JoinController {
 
 	@PostMapping(value = "/checkId", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Boolean> checkId(@RequestBody UserDto userDto) {
-		Boolean result = userService.findByUserId(userDto.getUserId()) == null;
+		String userId = userDto.getUserId();
+		if (userId == null) {
+			return ResponseEntity.badRequest().build();
+		}
+		Boolean result = userService.findByUserId(userId) == null;
 		return new ResponseEntity<Boolean>(result, HttpStatus.OK);
 	}
 
 	@PostMapping(value = "/checkEmail", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Boolean> checkEmail(@RequestBody UserDto userDto) {
-		Boolean result = userService.findByUserEmail(userDto.getUserEmail()) == null;
+		String userEmail = userDto.getUserEmail();
+		if (userEmail == null) {
+			return ResponseEntity.badRequest().build();
+		}
+		Boolean result = userService.findByUserEmail(userEmail) == null;
 		return new ResponseEntity<Boolean>(result, HttpStatus.OK);
 	}
 

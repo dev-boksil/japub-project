@@ -36,6 +36,9 @@ public class LoginController {
 	@PostMapping("/login")
 	public String login(boolean rememberId, String userId, String userPassword, HttpServletResponse resp,
 			RedirectAttributes attributes) {
+		if (SessionUtil.isLogin(session)) {
+			return ViewPathUtil.REDIRECT_MAIN;
+		}
 		UserDto userDto = userService.login(userId, userPassword);
 		if (userDto == null) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.LOGIN_ERROR_MSG);

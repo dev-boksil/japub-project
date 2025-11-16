@@ -1,6 +1,5 @@
 package com.app.japub.domain.service.board;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -23,24 +22,12 @@ public class BoardServiceImpl implements BoardService {
 
 	@Override
 	public List<BoardDto> findByCriteria(Criteria criteria) {
-		try {
-			return boardDao.findByCriteria(criteria);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("boardService findByCriteria error");
-			return Collections.emptyList();
-		}
+		return boardDao.findByCriteria(criteria);
 	}
 
 	@Override
 	public BoardDto findByBoardNum(Long boardNum) {
-		try {
-			return boardDao.findByBoardNum(boardNum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("boardService findByBoardNum error");
-			return null;
-		}
+		return boardDao.findByBoardNum(boardNum);
 	}
 
 	@Override
@@ -64,46 +51,22 @@ public class BoardServiceImpl implements BoardService {
 
 	@Override
 	public boolean delete(Long userNum, Long boardNum) {
-		try {
-			return boardDao.delete(userNum, boardNum) == DbConstants.SUCCESS_CODE;
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("boardService delete error");
-			return false;
-		}
+		return boardDao.delete(userNum, boardNum) == DbConstants.SUCCESS_CODE;
 	}
 
 	@Override
 	public Long countByCriteria(Criteria criteria) {
-		try {
-			return boardDao.countByCriteria(criteria);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("boardService countByBoardNum error");
-			return 0l;
-		}
+		return boardDao.countByCriteria(criteria);
 	}
 
 	@Override
 	public boolean incrementBoardReadCount(Long boardNum) {
-		try {
-			return boardDao.incrementBoardReadCount(boardNum) == DbConstants.SUCCESS_CODE;
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("boardService incrementBoardReadCount error");
-			return false;
-		}
+		return boardDao.incrementBoardReadCount(boardNum) == DbConstants.SUCCESS_CODE;
 	}
 
 	@Override
 	public BoardDto findByUserNumAndBoardNum(Long userNum, Long boardNum) {
-		try {
-			return boardDao.findByUserNumAndBoardNum(userNum, boardNum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("boardService findByUserNumAndBoardNum error");
-			return null;
-		}
+		return boardDao.findByUserNumAndBoardNum(userNum, boardNum);
 	}
 
 	@Override
@@ -111,13 +74,7 @@ public class BoardServiceImpl implements BoardService {
 		Criteria criteria = new Criteria();
 		criteria.setCategory(category);
 		criteria.setAmount(amount);
-		try {
-			return findByCriteria(criteria);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("boardService findByCategoryAndAmount error");
-			return Collections.emptyList();
-		}
+		return findByCriteria(criteria);
 	}
 
 	@Override

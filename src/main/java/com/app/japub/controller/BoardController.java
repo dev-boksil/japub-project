@@ -2,6 +2,7 @@ package com.app.japub.controller;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javax.servlet.http.HttpSession;
 
@@ -48,16 +49,19 @@ public class BoardController {
 	private static final String DETAIL_PATH = "detail";
 	private static final String DOWNLOAD_CATEGORY = "download";
 	private static final String BOARD_KEY = "board";
+	private static final String BOARD_NUM_KEY = "boardNum";
 
 	@GetMapping("/list")
 	public void list(Criteria criteria, Model model) {
-		setCategory(criteria);
+		String category = criteria.getCategory();
+		setCategory(criteria, model);
 		List<BoardDto> boards = boardService.findByCriteria(criteria);
 		boards.forEach(boardService::setBoardRegisterDateTime);
 		model.addAttribute("boards", boards);
 		model.addAttribute("pageDto", new PageDto(criteria, boardService.countByCriteria(criteria)));
-		model.addAttribute("writable", SessionUtil.isAdmin(session)
-				|| (isValidCategory(criteria.getCategory()) && !isAdminCategory(criteria.getCategory())));
+		if (isPublicCategory(category) || (isValidCategory(category) && SessionUtil.isAdmin(session))) {
+			model.addAttribute("writable", true);
+		}
 	}
 
 	@GetMapping("/write")
@@ -96,31 +100,32 @@ public class BoardController {
 			addBoardToFlash(boardDto, attributes);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, WRITE_PATH);
 		}
-
 	}
 
 	@GetMapping("/detail")
 	public String detail(Criteria criteria, Long boardNum, RedirectAttributes attributes, Model model) {
 		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
+
 		if (redirectPath != null) {
 			return redirectPath;
 		}
+
+		boardService.incrementBoardReadCount(boardNum);
 		BoardDto boardDto = boardService.findByBoardNum(boardNum);
 		redirectPath = redirectIfBoardNotFound(boardDto, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		boardService.incrementBoardReadCount(boardNum);
-		boardDto = boardService.findByBoardNum(boardNum);
-		setBoardDisplayData(boardDto);
-		Long userNum = SessionUtil.getSessionNum(session);
-		addUserIdToModel(userNum, model);
-		addBoardToModel(boardDto, model);
-		SessionUtil.addIsAdminToModel(model, session);
+
 		if (!DOWNLOAD_CATEGORY.equals(boardDto.getBoardCategory())) {
 			model.addAttribute("showImage", true);
 			addFilesToModel(boardNum, model);
 		}
+
+		setBoardDisplayData(boardDto);
+		addUserIdToModel(SessionUtil.getSessionNum(session), model);
+		SessionUtil.addIsAdminToModel(model, session);
+		model.addAttribute(BOARD_KEY, boardDto);
 		return ViewPathUtil.getForwardPath(BASE_PATH, DETAIL_PATH);
 	}
 
@@ -130,24 +135,29 @@ public class BoardController {
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
+
 		if (model.getAttribute(BOARD_KEY) != null) {
 			return ViewPathUtil.getForwardPath(BASE_PATH, UPDATE_PATH);
 		}
+
 		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
+
 		BoardDto boardDto = boardService.findByBoardNum(boardNum);
 		redirectPath = redirectIfBoardNotFound(boardDto, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		redirectPath = redirectIfBoardNotOwner(boardDto, userNum, criteria, attributes);
+
+		redirectPath = redirectIfNotBoardOwner(userNum, boardDto, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
+
 		setBoardDisplayData(boardDto);
-		addBoardToModel(boardDto, model);
+		model.addAttribute(BOARD_KEY, boardDto);
 		return ViewPathUtil.getForwardPath(BASE_PATH, UPDATE_PATH);
 	}
 
@@ -157,30 +167,34 @@ public class BoardController {
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
+
 		Long boardNum = boardDto.getBoardNum();
 		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		BoardDto boardToValidate = boardService.findByBoardNum(boardNum);
-		redirectPath = redirectIfBoardNotFound(boardToValidate, criteria, attributes);
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-		redirectPath = redirectIfBoardNotOwner(boardToValidate, userNum, criteria, attributes);
-		if (redirectPath != null) {
-			return redirectPath;
-		}
+
 		try {
 			boardDto.setUserNum(userNum);
 			boardService.update(boardDto);
-			addBoardNumToAttribute(boardNum, attributes);
+			attributes.addAttribute(BOARD_NUM_KEY, boardNum);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, DETAIL_PATH);
 		} catch (Exception e) {
 			e.printStackTrace();
+
+			BoardDto dbBoard = boardService.findByBoardNum(boardNum);
+			redirectPath = redirectIfBoardNotFound(dbBoard, criteria, attributes);
+			if (redirectPath != null) {
+				return redirectPath;
+			}
+
+			redirectPath = redirectIfNotBoardOwner(userNum, dbBoard, criteria, attributes);
+			if (redirectPath != null) {
+				return redirectPath;
+			}
+
 			MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
-			addBoardToFlash(boardDto, attributes);
-			addBoardNumToAttribute(boardNum, attributes);
+			attributes.addFlashAttribute(BOARD_KEY, boardDto);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, UPDATE_PATH);
 		}
 	}
@@ -191,35 +205,45 @@ public class BoardController {
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
+
 		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
+
+		boolean isAdmin = SessionUtil.isAdmin(session);
+		boolean isSuccess = isAdmin ? adminService.deleteByBoardNum(boardNum) : boardService.delete(userNum, boardNum);
+		if (isSuccess) {
+			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
+		}
+
 		BoardDto boardDto = boardService.findByBoardNum(boardNum);
 		redirectPath = redirectIfBoardNotFound(boardDto, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		boolean isAdmin = SessionUtil.isAdmin(session);
-		redirectPath = isAdmin ? null : redirectIfBoardNotOwner(boardDto, userNum, criteria, attributes);
+
+		redirectPath = isAdmin ? null : redirectIfNotBoardOwner(userNum, boardDto, criteria, attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		boolean isSuccess = isAdmin ? adminService.deleteByBoardNum(boardNum) : boardService.delete(userNum, boardNum);
-		if (!isSuccess) {
-			addBoardNumToAttribute(boardNum, attributes);
-			MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
-			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, DETAIL_PATH);
-		}
+
+		MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
 		return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
 	}
 
-	private String redirectIfBoardNotOwner(BoardDto boardDto, Long userNum, Criteria criteria,
+	private String redirectIfNotBoardOwner(Long sessionUserNum, BoardDto boardDto, Criteria criteria,
 			RedirectAttributes attributes) {
-		if (!userNum.equals(boardDto.getUserNum())) {
-			MessageConstants.addErrorMessage(attributes, MessageConstants.PERMISSION_NOT_ALLOW_MSG);
-			addBoardNumToAttribute(boardDto.getBoardNum(), attributes);
-			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, DETAIL_PATH);
+		String redirectPath = redirectIfBoardNumIsNull(boardDto.getBoardNum(), criteria, attributes);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
+		if (!Objects.equals(sessionUserNum, boardDto.getUserNum())) {
+			MessageConstants.addErrorMessage(attributes, MessageConstants.BOARD_NO_PERMISSION_MSG);
+			attributes.addAttribute(BOARD_NUM_KEY, boardDto.getBoardNum());
+			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
 		}
 		return null;
 	}
@@ -246,19 +270,31 @@ public class BoardController {
 
 	private String redirectIfInvalidCategory(Criteria criteria, boolean isAdmin, RedirectAttributes attributes) {
 		if (!isValidCategory(criteria.getCategory())) {
+			criteria.setCategory(DEFAULT_CATEGORY);
 			MessageConstants.addErrorMessage(attributes, MessageConstants.CATEGORY_NOT_FOUND_MSG);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
 		}
+
 		if (isAdminCategory(criteria.getCategory()) && !isAdmin) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.ADMIN_NOT_ALLOW_MSG);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
 		}
+
 		return null;
 	}
 
-	private void setCategory(Criteria criteria) {
+	private void setCategory(Criteria criteria, Model model) {
 		String category = criteria.getCategory();
-		if (category == null || category.isEmpty()) {
+		if (category == null || category.isBlank()) {
+			criteria.setCategory(DEFAULT_CATEGORY);
+		}
+
+		if (!isValidCategory(category)) {
+
+			if (!model.containsAttribute(MessageConstants.KEY_MSG)) {
+				model.addAttribute(MessageConstants.KEY_MSG, MessageConstants.CATEGORY_NOT_FOUND_MSG);
+			}
+
 			criteria.setCategory(DEFAULT_CATEGORY);
 		}
 	}
@@ -271,13 +307,18 @@ public class BoardController {
 		}
 	}
 
-	private void addBoardNumToAttribute(Long boardNum, RedirectAttributes attributes) {
-		attributes.addAttribute("boardNum", boardNum);
-	}
-
 	private void addUserIdToModel(Long userNum, Model model) {
 		UserDto userDto = userService.findByUserNum(userNum);
 		model.addAttribute("userId", userDto == null ? "" : userDto.getUserId());
+	}
+
+	private void setBoardDisplayData(BoardDto boardDto) {
+		boardService.setBoardRegisterDate(boardDto);
+		boardDto.setBoardCommentCount(commentService.countByBoardNum(boardDto.getBoardNum()));
+	}
+
+	private boolean isPublicCategory(String category) {
+		return isValidCategory(category) && !isAdminCategory(category);
 	}
 
 	private boolean isValidCategory(String category) {
@@ -286,15 +327,6 @@ public class BoardController {
 
 	private boolean isAdminCategory(String category) {
 		return ADMIN_CATEGORIES.contains(category);
-	}
-
-	private void addBoardToModel(BoardDto boardDto, Model model) {
-		model.addAttribute(BOARD_KEY, boardDto);
-	}
-
-	private void setBoardDisplayData(BoardDto boardDto) {
-		boardService.setBoardRegisterDate(boardDto);
-		boardDto.setBoardCommentCount(commentService.countByBoardNum(boardDto.getBoardNum()));
 	}
 
 }

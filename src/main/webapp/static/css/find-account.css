@@ -127,4 +127,12 @@ div.find-contents fieldset legend {
 	font-size: 13px;
 	vertical-align: middle;
 }
+
+.dimmed-container {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: none;
+}
 /* find -------------------------*/
