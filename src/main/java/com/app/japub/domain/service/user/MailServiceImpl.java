@@ -21,20 +21,13 @@ public class MailServiceImpl implements MailService {
 	private String from;
 
 	@Override
-	public boolean sendMail(UserDto userDto) {
+	public void sendMail(UserDto userDto) {
 		SimpleMailMessage message = new SimpleMailMessage();
 		message.setFrom(from); // 보내는 사람 이메일
 		message.setTo(userDto.getUserEmail()); // 받는 사람 이메일
 		message.setSubject(TITLE); // 이메일 제목
 		message.setText(getMailContent(userDto)); // 이메일 본문
-		try {
-			mailSender.send(message);
-			return true;
-		} catch (MailException e) {
-			e.printStackTrace();
-			System.out.println("mailService sendEmail error");
-			return false;
-		}
+		mailSender.send(message);
 	}
 
 	@Override

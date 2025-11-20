@@ -52,12 +52,12 @@ public class JoinController {
 	}
 
 	@GetMapping
-	public String join(RedirectAttributes attributes) {
+	public String join(RedirectAttributes attributes, Model model) {
 		String redirectPath = redirectToMainIfLoggedIn(attributes);
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		if (!FlashAttributeUtil.isSuccess(attributes)) {
+		if (!FlashAttributeUtil.isSuccess(model)) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
 			return ViewPathUtil.getRedirectPath(null, BASE_PATH, TERM_PATH);
 		}

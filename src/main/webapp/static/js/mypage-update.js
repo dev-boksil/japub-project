@@ -1,10 +1,8 @@
+import { getValidationChecks, getPasswordInputs, emptyCheck, changeCss, setValidationCheck } from './join.js';
 
 (function() {
-	const $passwordInput = $("input[name=userPassword]");
-	const $passwordCheckInput = $("input[name=userPasswordCheck]");
-	const $changeEditBtn = $(".changePwBtn");
-	const $cancelBtn = $(".cancelChangePwBtn");
-	const $changeSaveBtn = $(".changePwOkbtn");
+	const { $passwordInput, $passwordCheckInput } = getPasswordInputs();
+	const { $cancelBtn, $changeEditBtn, $changeSaveBtn } = getBtns();
 	let password = "";
 
 	$changeEditBtn.on("click", function(e) {
@@ -20,8 +18,8 @@
 	$changeSaveBtn.on("click", function(e) {
 		e.preventDefault();
 		if (!emptyCheck()) { return; }
-		const { userPassword, userPasswordCheck } = validationChecks;
-		if (!userPassword || !userPasswordCheck) { alert("모든 항목을 정확히 입력하세요."); return; }
+		const { userPassword, userPasswordCheck } = getValidationChecks();
+		if (!userPassword || !userPasswordCheck) { alert("모든 항목을 정확히 입력해 주세요."); return; }
 		$(this).closest("form").submit();
 	});
 
@@ -37,6 +35,14 @@
 		setValidationCheck($passwordInput, false);
 		setValidationCheck($passwordCheckInput, false);
 	});
+
+	function getBtns() {
+		return {
+			$cancelBtn: $(".cancelChangePwBtn"),
+			$changeEditBtn: $(".changePwBtn"),
+			$changeSaveBtn: $(".changePwOkbtn")
+		}
+	}
 })();
 
 

@@ -9,6 +9,9 @@ $(".termSubmitBtn").on("click", function(e) { /*회원가입약관체크*/
 
 $(".termCancelBtn").on("click", function(e) { /*회원가입 약관 이전버튼*/
 	e.preventDefault();
-	let previousUrl = document.referrer || $(this).attr("href");
-	location.href = previousUrl;
+	if (history.length > 1) {
+		history.back();
+	} else {
+		location.href = $(this).attr("href");
+	}
 });

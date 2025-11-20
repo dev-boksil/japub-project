@@ -122,24 +122,24 @@ public class MypageController {
 
 	private String getUpdateOrDeleteView(RedirectAttributes attributes, Model model, boolean isDelete) {
 		Long userNum = SessionUtil.getSessionNum(session);
-		
+
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
-		
+
 		if (!FlashAttributeUtil.isSuccess(model)) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
 			addDeleteToAttribute(isDelete, attributes);
 			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
 		}
-		
+
 		UserDto userDto = userService.findByUserNum(userNum);
 		String redirectPath = redirectIfUserNotFound(userDto, attributes);
-		
+
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-		
+
 		model.addAttribute(KEY_USER, userDto);
 		SessionUtil.addSuccess(session);
 		return ViewPathUtil.getForwardPath(BASE_PATH, isDelete ? DELETE_PATH : UPDATE_PATH);
