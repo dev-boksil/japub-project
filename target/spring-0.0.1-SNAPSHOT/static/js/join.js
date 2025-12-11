@@ -8,23 +8,25 @@ const validationChecks =
 }
 const joinService = (function() {
 
-	function checkId(id, callback) {
+	function checkId($input, userId) {
 		$.ajax({
 			url: `${contextPath}/join/checkId`,
 			method: 'post',
 			contentType: 'application/json;charset=UTF-8',
-			data: JSON.stringify(id),
-			success: callback
+			data: JSON.stringify({ userId }),
+			success: isSuccess => successCallback($input, isSuccess),
+			error: xhr => errorCallback(xhr, $input)
 		});
 	}
 
-	function checkEmail(email, callback) {
+	function checkEmail($input, userEmail) {
 		$.ajax({
 			url: `${contextPath}/join/checkEmail`,
 			method: 'post',
 			contentType: 'application/json;charset=UTF-8',
-			data: JSON.stringify(email),
-			success: callback
+			data: JSON.stringify({ userEmail }),
+			success: isSuccess => successCallback($input, isSuccess),
+			error: xhr => errorCallback(xhr, $input)
 		});
 	}
 
@@ -77,8 +79,7 @@ function sample6_execDaumPostcode() {
 }
 
 (function() {
-	const $passwordInput = $("input[name=userPassword]");
-	const $passwordCheckInput = $("input[name=userPasswordCheck]");
+	const { $passwordInput, $passwordCheckInput } = getPasswordInputs();
 
 	$("input[name=userId]").on("blur", function() {
 		const $input = $(this);
@@ -87,13 +88,9 @@ function sample6_execDaumPostcode() {
 		const isSuccess = validateId(userId);
 		const msg = isSuccess ? "" : "잘못된 아이디 형식입니다.";
 		changeCss($input, isSuccess, msg);
-		setValidationCheck($input, validationChecks, isSuccess);
+		setValidationCheck($input, isSuccess);
 		if (!isSuccess) { return; }
-		joinService.checkId({ userId }, (isSuccess) => {
-			const msg = isSuccess ? "" : "중복된 아이디 입니다.";
-			changeCss($input, isSuccess, msg);
-			setValidationCheck($input, validationChecks, isSuccess);
-		});
+		joinService.checkId($input, userId);
 	});
 
 	$("input[name=userEmail]").on("blur", function(e) {
@@ -103,13 +100,9 @@ function sample6_execDaumPostcode() {
 		const isSuccess = validateEmail(userEmail);
 		const msg = isSuccess ? "" : "잘못된 이메일 형식입니다.";
 		changeCss($input, isSuccess, msg);
-		setValidationCheck($input, validationChecks, isSuccess);
+		setValidationCheck($input, isSuccess);
 		if (!isSuccess) { return; }
-		joinService.checkEmail({ userEmail }, (isSuccess) => {
-			const msg = isSuccess ? "" : "중복된 이메일 입니다.";
-			changeCss($input, isSuccess, msg);
-			setValidationCheck($input, validationChecks, isSuccess);
-		});
+		joinService.checkEmail($input, userEmail);
 	});
 
 	$passwordInput.on("blur", function() {
@@ -139,29 +132,64 @@ function sample6_execDaumPostcode() {
 		const isSuccess = validatePhone(phone);
 		const msg = isSuccess ? "" : "잘못된 핸드폰번호 입니다.";
 		changeCss($input, isSuccess, msg);
-		setValidationCheck($input, validationChecks, isSuccess);
+		setValidationCheck($input, isSuccess);
 	});
 
 	$("input[class=submit]").on("click", function(e) {
 		e.preventDefault();
 		if (!emptyCheck()) { return; }
-		const result = Object.values(validationChecks).includes(false);
-		if (result) { alert("모든 필드를 정확히 입력해주세요."); return; }
+		if (hasFalse()) { alert("모든 항목을 정확히 입력해 주세요."); return; }
 		$(this).closest("form").submit();
 	});
 })();
 
-function setValidationCheck($input, isSuccess) {
+
+function hasFalse() {
+	return Object.values(validationChecks).includes(false);
+}
+
+function getName($input) {
+	return $input.attr("name") == 'userId' ? '아이디' : '이메일';
+}
+
+export function getPasswordInputs() {
+	return {
+		$passwordInput: $("input[name=userPassword]"),
+		$passwordCheckInput: $("input[name=userPasswordCheck]")
+	}
+}
+
+function successCallback($input, isSuccess) {
+	const msg = isSuccess ? '' : `중복된 ${getName($input)} 입니다.`;
+	changeCss($input, isSuccess, msg);
+	setValidationCheck($input, isSuccess);
+}
+
+
+function errorCallback(xhr, $input) {
+	let name = getName($input);
+	name = name === '아이디' ? name + '를' : name + '을';
+	const msg = xhr.status == 400 ? `${name} 입력해 주세요.` : "요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+	changeCss($input, false, msg);
+	setValidationCheck($input, false);
+}
+
+export function setValidationCheck($input, isSuccess) {
 	const name = $input.attr("name");
 	validationChecks[name] = isSuccess;
 }
 
-function changeCss($input, isSuccess, msg) {
+export function changeCss($input, isSuccess, msg) {
 	const $span = $input.next("span.error-msg");
 	let color = isSuccess ? "rgb(240,240,240)" : "red";
 	$input.css({ "outline-color": color, "border-color": color });
 	isSuccess ? $span.hide() : $span.text(msg).show();
 }
+
+export function getValidationChecks() {
+	return { ...validationChecks };
+}
+
 
 function validateId(id) { /*아이디 정규식*/
 	const regex = /^[a-z0-9_-]{5,20}$/;
@@ -209,7 +237,7 @@ function validatePhone(phoneNumber) {  /*핸드폰정규식*/
 	return true;
 }
 
-function emptyCheck() { /*join input empty check*/
+export function emptyCheck() { /*join input empty check*/
 	if (!$("input[name = userId]").val().trim()) {
 		alert("아이디를 입력해주세요.");
 		return false;

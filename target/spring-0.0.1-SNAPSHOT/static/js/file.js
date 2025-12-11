@@ -58,26 +58,25 @@ const fileService = (function() {
 			refreshFile(fileArray, fileSizeArray);
 			return;
 		}
-		files.forEach(file => {
+		for (const file of files) {
 			if ("download" != category && !isImage(file.type)) { alert("이미지 형식만 업로드 가능합니다."); return; }
 			if (!validateFileName(file.name)) { alert("업로드 가능한 파일 형식이 아닙니다."); return; }
 			if (!validateFileSize(file.size)) { alert("업로드 가능한 용량을 초과 하였습니다."); return; }
-			formData.append("multipartFiles", file);
 			fileArray.push(file);
 			fileSizeArray.push(file.size);
-		});
-		if (!isEmpty(formData)) {
-			isUpdate ? fileService.upload(formData, category, files => appendThumbnails(files, true)) : fileService.upload(formData, category, files => appendThumbnails(files));
+			formData.append("multipartFiles", file);
 		}
+		fileService.upload(formData, category, files => isUpdate ? appendThumbnails(files, true) : appendThumbnails(files, false));
 		refreshFile(fileArray, fileSizeArray);
 	});
 
 	$(".thumbnail-ul").on("click", ".file-cancel-btn", function(e) {
 		e.preventDefault();
-		const $li = $(this).closest("li");
+		const $cancelBtn = $(this);
+		const $li = $cancelBtn.closest("li");
 		let index;
 		if (!isUpdate) {
-			index = $(".file-cancel-btn").index($(this));
+			index = $(".file-cancel-btn").index($cancelBtn);
 			refreshFile(fileArray, fileSizeArray, index);
 			$li.remove();
 			return;

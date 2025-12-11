@@ -55,7 +55,7 @@ public class LoginController {
 		if (SessionUtil.isLogin(session)) {
 			session.invalidate();
 		}
-		return ViewPathUtil.REDIRECT_LOGIN;
+		return ViewPathUtil.REDIRECT_MAIN;
 	}
 
 	private void setCookie(boolean rememberId, String userId, HttpServletResponse resp) {

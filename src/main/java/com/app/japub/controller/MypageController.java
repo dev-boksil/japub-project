@@ -29,12 +29,22 @@ public class MypageController {
 	private static final String UPDATE_PATH = "update";
 	private static final String DELETE_PATH = "delete";
 	private static final String KEY_USER = "user";
+	private static final String KEY_DELETE = "isDelete";
 
 	@GetMapping("/check-password")
-	public String checkPassword() {
-		if (!SessionUtil.isLogin(session)) {
+	public String checkPassword(RedirectAttributes attributes) {
+		Long userNum = SessionUtil.getSessionNum(session);
+
+		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
+
+		String redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
 		return ViewPathUtil.getForwardPath(BASE_PATH, CHECK_PASSWORD_PATH);
 	}
 
@@ -46,6 +56,7 @@ public class MypageController {
 		}
 
 		boolean isSuccess = userService.findByUserNumAndUserPassword(userNum, userPassword) != null;
+		
 		if (isSuccess) {
 			FlashAttributeUtil.addSuccessToFlash(attributes);
 			return ViewPathUtil.getRedirectPath(null, BASE_PATH, parseBoolean(isDelete) ? DELETE_PATH : UPDATE_PATH);
@@ -110,7 +121,8 @@ public class MypageController {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 
-		String redirectPath = redirectIfUserNotFound(userDto, attributes);
+		String redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes); // 2025 11-25 수정
+																										// 아직 수정배포전
 		if (redirectPath != null) {
 			return redirectPath;
 		}
@@ -155,7 +167,7 @@ public class MypageController {
 	}
 
 	private void addDeleteToAttribute(boolean isDelete, RedirectAttributes attributes) {
-		attributes.addAttribute("isDelete", isDelete);
+		attributes.addAttribute(KEY_DELETE, isDelete);
 	}
 
 	private boolean parseBoolean(String isDelete) {

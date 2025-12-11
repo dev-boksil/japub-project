@@ -16,7 +16,6 @@ C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\common\SessionUtil.jav
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\service\admin\AdminService.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\dao\admin\AdminDao.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\dto\CommentDto.java
-C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\controller\ErrorControllerAdvice.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\controller\JoinController.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\task\FileTask.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\service\product\ProductService.java
