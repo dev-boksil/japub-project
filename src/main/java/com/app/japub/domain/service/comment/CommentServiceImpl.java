@@ -1,6 +1,5 @@
 package com.app.japub.domain.service.comment;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -19,68 +18,32 @@ public class CommentServiceImpl implements CommentService {
 
 	@Override
 	public boolean insert(CommentDto commentDto) {
-		try {
-			return commentDao.insert(commentDto) == DbConstants.SUCCESS_CODE;
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("commentService insert error");
-			return false;
-		}
+		return commentDao.insert(commentDto) == DbConstants.SUCCESS_CODE;
 	}
 
 	@Override
 	public boolean update(CommentDto commentDto) {
-		try {
-			return commentDao.update(commentDto) == DbConstants.SUCCESS_CODE;
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("commentService update error");
-			return false;
-		}
+		return commentDao.update(commentDto) == DbConstants.SUCCESS_CODE;
 	}
 
 	@Override
 	public boolean delete(Long userNum, Long commentNum) {
-		try {
-			return commentDao.delete(userNum, commentNum) == DbConstants.SUCCESS_CODE;
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("commentService delete error");
-			return false;
-		}
+		return commentDao.delete(userNum, commentNum) == DbConstants.SUCCESS_CODE;
 	}
 
 	@Override
 	public Long countByBoardNum(Long boardNum) {
-		try {
-			return commentDao.countByBoardNum(boardNum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("commentService countByBoardNum error");
-			return 0l;
-		}
+		return commentDao.countByBoardNum(boardNum);
 	}
 
 	@Override
 	public List<CommentDto> findByCriteriaAndBoardNum(Criteria criteria, Long boardNum) {
-		try {
-			return commentDao.findByCriteriaAndBoardNum(criteria, boardNum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("commentService findByCriteriaAndBoardNum error");
-			return Collections.emptyList();
-		}
+		return commentDao.findByCriteriaAndBoardNum(criteria, boardNum);
 	}
 
 	@Override
 	public int getNextPageCount(Criteria criteria, Long boardNum) {
-		try {
-			criteria.setPage(criteria.getPage() + 1);
-			return commentDao.getPageCount(criteria, boardNum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("commentService getNextPageCount error");
-			return 0;
-		}
+		criteria.setPage(criteria.getPage() + 1);
+		return commentDao.getPageCount(criteria, boardNum);
 	}
 }
