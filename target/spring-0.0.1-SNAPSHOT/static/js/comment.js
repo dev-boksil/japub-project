@@ -1,20 +1,20 @@
 const commentService = (function() {
-	function insert(boardNum, comment, callback) {
+	function insert(boardNum, { commentContent, commentParentNum, commentParentId }, callback) {
 		$.ajax({
-			url: `${contextPath}/comments/${boardNum}`,
+			url: `${contextPath}/comments?boardNum=${boardNum}`,
 			method: 'post',
 			contentType: 'application/json;charset=UTF-8',
-			data: JSON.stringify(comment),
+			data: JSON.stringify({ commentContent, commentParentNum, commentParentId }),
 			success: callback
 		});
 	}
 
-	function update(commentNum, comment, callback) {
+	function update(commentNum, commentContent, callback) {
 		$.ajax({
 			url: `${contextPath}/comments/${commentNum}`,
 			method: 'patch',
 			contentType: 'application/json;charset=UTF-8',
-			data: JSON.stringify(comment),
+			data: JSON.stringify({ commentContent }),
 			success: callback
 		});
 	}
@@ -29,7 +29,7 @@ const commentService = (function() {
 
 	function getCommentsDto(boardNum, page, callback) {
 		$.ajax({
-			url: `${contextPath}/comments/${boardNum}?page=${page}`,
+			url: `${contextPath}/comments?boardNum=${boardNum}&page=${page}`,
 			method: 'get',
 			success: callback
 		});
@@ -37,98 +37,6 @@ const commentService = (function() {
 
 	return { insert, update, remove, getCommentsDto };
 })();
-
-
-(function() {
-	const boardNum = $(".container").data("boardNum");
-	const $updateLi = $(".update-li");
-	const $commentUl = $("ul.comment-ul");
-	const status = { isEditing: false };
-	const { $cancelBtn, $updateDoneBtn, $replyDoneBtn, $updateLiTextarea } = getEleToUpdateLi($updateLi);
-	let page = 1;
-	showComments($commentUl, boardNum, page);
-
-	$(".comment-insert-btn").on("click", function(e) { //등록
-		e.preventDefault();
-		if (!sessionUserNum) { alert("로그인 후 사용하실 수 있습니다."); return; }
-		const $insertTextarea = $(this).closest(".comment-container").find("textarea")
-		const commentContent = $insertTextarea.val().trim();
-		if (!commentContent) { alert("댓글을 입력하세요"); return; }
-		commentService.insert(boardNum, { commentContent }, () => {
-			$insertTextarea.val("");
-			showComments($commentUl, boardNum, page);
-		});
-	});
-
-	$cancelBtn.on("click", function(e) { //취소
-		e.preventDefault();
-		resetUpdateLi($updateLi);
-		status.isEditing = false;
-	});
-
-	$commentUl.on("click", ".comment-remove-btn", function(e) { //삭제
-		e.preventDefault();
-		if (!confirm("정말로 삭제하시겠습니까?")) { return; }
-		const commentNum = $(this).closest("li").data("commentNum");
-		commentService.remove(commentNum, () => showComments($commentUl, boardNum, page));
-	});
-
-	$commentUl.on("click", ".comment-update-btn", function(e) { //수정
-		e.preventDefault();
-		if (status.isEditing) { return; }
-		status.isEditing = true;
-		const $li = $(this).closest("li");
-		$updateLi.data("commentNum", $li.data("commentNum"))
-		const commentContent = $li.find("span.comment-content").text();
-		$updateLiTextarea.val(commentContent);
-		$li.hide().after($updateLi);
-		$updateLi.show();
-	});
-
-	$commentUl.on("click", ".comment-reply-btn", function(e) { //수정
-		e.preventDefault();
-		if (status.isEditing) { return; }
-		status.isEditing = true;
-		const $li = $(this).closest("li");
-		$updateLi.data("parentNum", $li.data("commentNum")).data("parentId", $li.data("userId"));
-		$replyDoneBtn.css("display", "inline-block");
-		$updateDoneBtn.hide();
-		$li.after($updateLi);
-		$updateLi.show();
-	});
-
-	$updateDoneBtn.on("click", function(e) {
-		e.preventDefault();
-		const commentContent = $updateLiTextarea.val().trim();
-		if (!commentContent) { alert("댓글을 입력하세요."); return; }
-		const commentNum = $updateLi.data("commentNum");
-		commentService.update(commentNum, { commentContent }, () => {
-			resetUpdateLi($updateLi);
-			status.isEditing = false;
-			showComments($commentUl, boardNum, page);
-		});
-	});
-
-	$replyDoneBtn.on("click", function(e) {
-		e.preventDefault();
-		const commentContent = $updateLiTextarea.val().trim();
-		if (!commentContent) { alert("댓글을 입력하세요."); return; }
-		const comment = { commentContent, commentParentNum: $updateLi.data("parentNum"), commentParentId: $updateLi.data("parentId") }
-		commentService.insert(boardNum, comment, () => {
-			resetUpdateLi($updateLi);
-			status.isEditing = false;
-			showComments($commentUl, boardNum, page);
-		});
-	});
-
-	$commentUl.on("click", ".comment-more-btn", function(e) {
-		e.preventDefault();
-		showComments($commentUl, boardNum, ++page);
-	});
-
-})();
-
-
 
 function resetUpdateLi($updateLi) {
 	const { $updateDoneBtn, $replyDoneBtn, $updateLiTextarea } = getEleToUpdateLi($updateLi);
@@ -189,18 +97,30 @@ function createComments(commentsDto) {
 }
 
 function createCommentBtns(comment, sessionUserNum, isAdmin) {
-	if (!sessionUserNum) { return ""; }
+	if (!isLogin(sessionUserNum)) return "";
+
 	const isMyComment = comment.userNum == sessionUserNum;
 	const canReply = !isMyComment && (comment.commentParentNum == comment.commentNum);
 	let html = "";
+
 	if (isAdmin || isMyComment) {
 		html += `<a href="#" class="comment-update-btn">수정</a>`;
 		html += `<a href="#" class="comment-remove-btn">삭제</a>`;
 	}
+
 	if (canReply) {
 		html += `<a href="#" class="comment-reply-btn">답글</a>`;
 	}
+
 	return html;
+}
+
+function isLogin(sessionUserNum) {
+	if (sessionUserNum && sessionUserNum >= 0) {
+		return true;
+	} else {
+		false;
+	}
 }
 
 function elapsetTime(registerDate) {
@@ -223,6 +143,98 @@ function elapsetTime(registerDate) {
 	return `방금전`;
 }
 
+(function() {
+	const boardNum = $(".container").data("boardNum");
+	const $updateLi = $(".update-li");
+	const $commentUl = $("ul.comment-ul");
+	const status = { isEditing: false };
+	const { $cancelBtn, $updateDoneBtn, $replyDoneBtn, $updateLiTextarea } = getEleToUpdateLi($updateLi);
+	let page = 1;
+	showComments($commentUl, boardNum, page);
+
+	$(".comment-insert-btn").on("click", function(e) { //등록
+		e.preventDefault();
+		const $insertTextarea = $(this).closest(".comment-container").find("textarea")
+		if (!isLogin(sessionUserNum)) { alert("로그인 후 사용하실 수 있습니다."); $insertTextarea.val(""); return; }
+		const commentContent = $insertTextarea.val().trim();
+		if (!commentContent) { alert("댓글을 입력해주세요"); return; }
+		commentService.insert(boardNum, { commentContent }, () => {
+			$insertTextarea.val("");
+			showComments($commentUl, boardNum, page);
+		});
+	});
+
+	$cancelBtn.on("click", function(e) { //취소
+		e.preventDefault();
+		resetUpdateLi($updateLi);
+		status.isEditing = false;
+	});
+
+	$commentUl.on("click", ".comment-remove-btn", function(e) { //삭제
+		e.preventDefault();
+		if (!confirm("정말로 삭제하시겠습니까?")) { return; }
+		const commentNum = $(this).closest("li").data("commentNum");
+		commentService.remove(commentNum, () => showComments($commentUl, boardNum, page));
+	});
+
+	$commentUl.on("click", ".comment-update-btn", function(e) { //수정
+		e.preventDefault();
+		if (status.isEditing) { return; }
+		status.isEditing = true;
+		const $li = $(this).closest("li");
+		$updateLi.data("commentNum", $li.data("commentNum"))
+		const commentContent = $li.find("span.comment-content").text();
+		$updateLiTextarea.val(commentContent);
+		$li.hide().after($updateLi);
+		$updateLi.show();
+	});
+
+	$commentUl.on("click", ".comment-reply-btn", function(e) { //답글수정
+		e.preventDefault();
+		if (status.isEditing) { return; }
+		status.isEditing = true;
+		const $li = $(this).closest("li");
+		$updateLi.data("parentNum", $li.data("commentNum")).data("parentId", $li.data("userId"));
+		$replyDoneBtn.css("display", "inline-block");
+		$updateDoneBtn.hide();
+		$li.after($updateLi);
+		$updateLi.show();
+	});
+
+	$updateDoneBtn.on("click", function(e) {
+		e.preventDefault();
+		const commentContent = $updateLiTextarea.val().trim();
+		if (!commentContent) { alert("댓글을 입력하세요."); return; }
+		const commentNum = $updateLi.data("commentNum");
+		commentService.update(commentNum, commentContent, () => {
+			resetUpdateLi($updateLi);
+			status.isEditing = false;
+			showComments($commentUl, boardNum, page);
+		});
+	});
+
+	$replyDoneBtn.on("click", function(e) {
+		e.preventDefault();
+		const commentContent = $updateLiTextarea.val().trim();
+		if (!commentContent) { alert("댓글을 입력하세요."); return; }
+		const comment = {
+			commentContent,
+			commentParentNum: $updateLi.data("parentNum"),
+			commentParentId: $updateLi.data("parentId")
+		}
+		commentService.insert(boardNum, comment, () => {
+			resetUpdateLi($updateLi);
+			status.isEditing = false;
+			showComments($commentUl, boardNum, page);
+		});
+	});
+
+	$commentUl.on("click", ".comment-more-btn", function(e) {
+		e.preventDefault();
+		showComments($commentUl, boardNum, ++page);
+	});
+
+})();
 
 
 

@@ -1,33 +1,23 @@
+import { getClassNames, createHiddenInputs, showThumbnails } from "./file.js";
 
 (function() {
-	const boardNum = $(".container").data("boardNum");
-	const category = $(".container").data("boardCategory");
-	const isUpdate = $("input[name=multipartFiles]").data("update");
-	const isDetail = $(".container").data("boardDetail");
-	if (("download" === category) && isDetail) { showThumbnails(boardNum, true); }
-	if (isUpdate) { showThumbnails(boardNum, false); }
+	const $container = $(".container");
+	const boardNum = $container.data("boardNum");
+	const isShowThumbnails = "download" === $container.data("boardCategory")
+	const isDetail = $container.data("boardDetail");
+	if (isUpdate()) showThumbnails(boardNum, false);
+	if (isShowThumbnails && isDetail) showThumbnails(boardNum, true);
 })();
 
 
 (function() {
-	const classNames = { ORIGINAL: "original", NEW: "new", REMOVE: "remove" };
-
-	$(".write-board-btn").on("click", function(e) {
+	
+	$(".write-board-btn, .update-board-btn").on("click", function(e) {
 		e.preventDefault();
-		const formClassName = $(this).data("formClass");
-		const $form = $(`form.${formClassName}`);
-		if (!validateForm($form)) { return; }
-		const html = getHiddenInputs(classNames.ORIGINAL);
-		$form.append(html).submit();
-	});
-
-	$(".update-board-btn").on("click", function(e) {
-		e.preventDefault();
-		const formClassName = $(this).data("formClass");
-		const $form = $(`form.${formClassName}`);
-		if (!validateForm($form)) { return; }
-		let html = getHiddenInputs(classNames.NEW);
-		html += getHiddenInputs(classNames.REMOVE);
+		const $form = $(this).closest("form");
+		if (!validateForm($form)) return;
+		const { ORIGINAL, NEW, REMOVE } = getClassNames();
+		const html = isUpdate() ? createHiddenInputs(NEW) + createHiddenInputs(REMOVE) : createHiddenInputs(ORIGINAL);
 		$form.append(html).submit();
 	});
 
@@ -58,6 +48,10 @@
 		this.submit();
 	});
 })();
+
+function isUpdate() {
+	return $(".container").data("boardUpdate");
+}
 
 function validateForm($form) {
 	if (!$form.find("input[name=boardTitle]").val().trim()) { alert("제목을 입력하세요."); return false; }

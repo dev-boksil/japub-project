@@ -11,10 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.app.japub.common.DbConstants;
 import com.app.japub.domain.dao.file.FileDao;
-import com.app.japub.domain.dto.BoardDto;
 import com.app.japub.domain.dto.FileDto;
 
 import lombok.RequiredArgsConstructor;
@@ -36,24 +33,18 @@ public class FileServiceImpl implements FileService {
 
 	@Override
 	public List<FileDto> findByBoardNum(Long boardNum) {
-		try {
-			return fileDao.findByBoardNum(boardNum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("fileService findByBoardNum error");
-			return Collections.emptyList();
-		}
+		return fileDao.findByBoardNum(boardNum);
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public void insertFiles(BoardDto boardDto) {
-		List<FileDto> insertFiles = boardDto.getDeleteFiles();
+	public void insertFiles(List<FileDto> insertFiles, Long boardNum) {
 		if (insertFiles == null || insertFiles.isEmpty()) {
 			return;
 		}
+
 		for (FileDto insertFile : insertFiles) {
-			insertFile.setBoardNum(boardDto.getBoardNum());
+			insertFile.setBoardNum(boardNum);
 			if (fileDao.insert(insertFile) != DbConstants.SUCCESS_CODE) {
 				throw new RuntimeException("fileService insertFiles error");
 			}
@@ -62,11 +53,11 @@ public class FileServiceImpl implements FileService {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public void deleteFiles(BoardDto boardDto) {
-		List<FileDto> deleteFiles = boardDto.getDeleteFiles();
+	public void deleteFiles(List<FileDto> deleteFiles) {
 		if (deleteFiles == null || deleteFiles.isEmpty()) {
 			return;
 		}
+
 		for (FileDto deleteFile : deleteFiles) {
 			if (fileDao.deleteByFileNum(deleteFile.getFileNum()) != DbConstants.SUCCESS_CODE) {
 				throw new RuntimeException("fileService deleteFiles error");
@@ -89,46 +80,52 @@ public class FileServiceImpl implements FileService {
 			String contentType = Files.probeContentType(file.toPath());
 			return contentType != null && contentType.startsWith("image/");
 		} catch (IOException e) {
-			e.printStackTrace();
 			throw new RuntimeException("fileService isImage error");
 		}
 	}
 
 	@Override
 	public String getContentType(File file) {
+		String contentType;
+
 		try {
-			String contentType = Files.probeContentType(file.toPath());
-
-			if (contentType != null && !contentType.startsWith("image/")) {
-				throw new RuntimeException("not image Type");
-			}
-
-			if (contentType == null) {
-				String fileName = file.getName().toLowerCase();
-				int dot = fileName.lastIndexOf(".");
-
-				if (dot <= 0 || dot == fileName.length() - 1) {
-					throw new RuntimeException("파일 확장자가 존재하지 않습니다.");
-				}
-
-				String extension = fileName.substring(dot + 1);
-
-				if (extension.equals("jpg")) {
-					contentType = "image/jpeg";
-				} else if (extension.equals("jpeg")) {
-					contentType = "image/jpeg";
-				} else if (extension.equals("png")) {
-					contentType = "image/png";
-				} else if (extension.equals("gif")) {
-					contentType = "image/gif";
-				} else {
-					throw new RuntimeException("지원하지 않는 파일 형식입니다.");
-				}
-			}
-			return contentType;
+			contentType = Files.probeContentType(file.toPath());
 		} catch (IOException e) {
 			throw new RuntimeException("fileService getContentType error", e);
 		}
+
+		if (contentType == null) {
+			String fileName = file.getName().toLowerCase();
+			int dot = fileName.lastIndexOf(".");
+
+			if (dot <= 0 || dot == fileName.length() - 1) {
+				throw new RuntimeException("fileService getContentType no extension error");
+			}
+
+			String extension = fileName.substring(dot + 1);
+
+			switch (extension) {
+			case "jpg":
+			case "jpeg":
+				contentType = "image/jpeg";
+				break;
+			case "png":
+				contentType = "image/png";
+				break;
+			case "gif":
+				contentType = "image/gif";
+				break;
+			default:
+				throw new RuntimeException("fileService getContentType no match extension error");
+			}
+			return contentType;
+		}
+
+		if (!contentType.startsWith("image/")) {
+			throw new RuntimeException("fileService getContentType no image error");
+		}
+
+		return contentType;
 	}
 
 	@Override
@@ -137,7 +134,6 @@ public class FileServiceImpl implements FileService {
 				OutputStream out = new FileOutputStream(thumbnailFile);) {
 			Thumbnailator.createThumbnail(in, out, size, size);
 		} catch (Exception e) {
-			e.printStackTrace();
 			throw new RuntimeException("fileService createThumbnails error");
 		}
 	}
@@ -162,7 +158,6 @@ public class FileServiceImpl implements FileService {
 			}
 			return fileDto;
 		} catch (Exception e) {
-			e.printStackTrace();
 			throw new RuntimeException("fileService upload error", e);
 		}
 	}
@@ -170,11 +165,9 @@ public class FileServiceImpl implements FileService {
 	@Override
 	public void autoDeleteFiles(List<FileDto> yesterDayFiles, String directoryPath, String yesterdayPath) {
 		List<Path> paths = new ArrayList<>();
-		yesterDayFiles.stream().map(file -> Paths.get(directoryPath, getFileThumbnailPath(file).replace("t_", "")))
-				.forEach(paths::add);
+		yesterDayFiles.stream().map(file -> Paths.get(directoryPath, getFilePath(file))).forEach(paths::add);
 		yesterDayFiles.stream().map(file -> Paths.get(directoryPath, getFileThumbnailPath(file))).forEach(paths::add);
-		File dir = new File(directoryPath, yesterdayPath);
-		File[] files = dir.listFiles();
+		File[] files = new File(directoryPath, yesterdayPath).listFiles();
 		files = files == null ? new File[0] : files;
 		Arrays.stream(files).filter(file -> !paths.contains(file.toPath())).forEach(File::delete);
 	}
@@ -196,25 +189,12 @@ public class FileServiceImpl implements FileService {
 
 	@Override
 	public List<FileDto> findByYesterDay() {
-		try {
-			return fileDao.findByYesterDay();
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("fileService findByYesterDay error");
-			return Collections.emptyList();
-		}
+		return fileDao.findByYesterDay();
 	}
 
 	@Override
 	public int countByBoardNum(Long boardNum) {
-		try {
-			return fileDao.countByBoardNum(boardNum);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("fileService countByBoardNum error");
-			return 0;
-		}
-
+		return fileDao.countByBoardNum(boardNum);
 	}
 
 }

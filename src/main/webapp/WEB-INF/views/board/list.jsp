@@ -102,5 +102,5 @@
 	let sessionUserNum = '${sessionScope.userNum}';
 </script>
 <script src="<c:url value='/static/js/script.js' />"></script>
-<script src="<c:url value='/static/js/board.js' />"></script>
+<script type="module" src="<c:url value='/static/js/board.js' />"></script>
 </html>

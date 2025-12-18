@@ -10,14 +10,14 @@ import com.app.japub.domain.dto.FileDto;
 import com.app.japub.domain.dto.ProductDto;
 
 public interface FileService {
-	public abstract void insertFiles(BoardDto boardDto);
+	public abstract void insertFiles(List<FileDto> insertFiles, Long boardNum);
 
-	public abstract void deleteFiles(BoardDto boardDto);
-	
+	public abstract void deleteFiles(List<FileDto> deleteFiles);
+
 	public abstract List<FileDto> findByBoardNum(Long boardNum);
-	
+
 	public abstract List<FileDto> findByYesterDay();
-	
+
 	public abstract boolean isImage(File file);
 
 	public abstract File getUploadPath(String parent, String child);
@@ -31,12 +31,11 @@ public interface FileService {
 	public abstract void autoDeleteFiles(List<FileDto> yesterDayFiles, String directoryPath, String yesterdayPath);
 
 	public abstract String getFileThumbnailPath(FileDto fileDto);
-	
+
 	public abstract String getFilePath(FileDto fileDto);
 
 	public abstract void setFilePath(FileDto fileDto);
-	
+
 	public abstract int countByBoardNum(Long boardNum);
 
-	
 }

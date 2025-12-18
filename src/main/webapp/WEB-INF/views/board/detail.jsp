@@ -130,8 +130,7 @@
     
 </script>
 <script src="<c:url value='/static/js/script.js' />"></script>
-<script src="<c:url value='/static/js/file.js' />"></script>
-<script src="<c:url value='/static/js/board.js' />"></script>
-<script src="<c:url value='/static/js/comment.js' />"></script>
+<script type="module" src="<c:url value='/static/js/board.js' />"></script>
+<script type="module" src="<c:url value='/static/js/comment.js' />"></script>
 <script></script>
 </html>

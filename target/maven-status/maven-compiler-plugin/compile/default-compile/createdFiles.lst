@@ -26,6 +26,7 @@ com\app\japub\domain\service\user\MailServiceImpl.class
 com\app\japub\controller\FileController.class
 com\app\japub\domain\dao\comment\CommentDao.class
 com\app\japub\domain\service\board\BoardService.class
+com\app\japub\controller\RestErrorController.class
 com\app\japub\domain\dto\PageDto.class
 com\app\japub\domain\service\product\ProductService.class
 com\app\japub\domain\dto\CommentsDto.class

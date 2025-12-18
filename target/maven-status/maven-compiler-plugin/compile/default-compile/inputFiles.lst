@@ -39,6 +39,7 @@ C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\controller\FileControl
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\service\board\BoardService.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\controller\MainController.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\dao\file\FileDaoImpl.java
+C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\controller\RestErrorController.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\dto\ProductDto.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\controller\LoginController.java
 C:\spring_kyj\workspace\japub\src\main\java\com\app\japub\domain\service\user\UserServiceImpl.java
