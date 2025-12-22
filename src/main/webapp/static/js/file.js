@@ -228,7 +228,8 @@ function validateFileName(fileName) {
 			$li.remove();
 			refreshFile(fileArray, fileSizeArray, index);
 		} else {
-			$li.attr("class", getClassNames().REMOVE).hide();
+			const { REMOVE } = getClassNames().REMOVE;
+			$li.attr("class", REMOVE).hide();
 			--fileRemoveCount;
 		}
 	});

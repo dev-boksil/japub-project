@@ -35,8 +35,7 @@
 
 	$(".product-search-btn").on("click", function(e) {
 		e.preventDefault();
-		const $searchBtn = $(this);
-		const $form = $searchBtn.closest("form");
+		const $form = $(this).closest("form");
 		const keyword = $form.find("input[name=keyword]").val().trim();
 		if (!keyword) { alert("검색어를 입력하세요"); return; }
 		$form.submit();
