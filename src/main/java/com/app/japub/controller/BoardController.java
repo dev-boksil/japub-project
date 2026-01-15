@@ -3,6 +3,7 @@ package com.app.japub.controller;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.servlet.http.HttpSession;
 
@@ -65,19 +66,24 @@ public class BoardController {
 	public String write(Criteria criteria, RedirectAttributes attributes, Model model) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
-		String redirectPath = redirectIfNotLoginOrUserNotFound(userNum, attributes);
+		if (userNum == null) {
+			return ViewPathUtil.REDIRECT_LOGIN;
+		}
+
+		String redirectPath = redirectIfInvalidCategory(criteria, SessionUtil.isAdmin(session), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfInvalidCategory(criteria, SessionUtil.isAdmin(session), attributes);
+		UserDto userDto = userService.findByUserNum(userNum);
+		redirectPath = redirectIfUserNotFound(userDto, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		addUserIdToModel(userNum, model);
+		model.addAttribute("userId", userDto.getUserId());
 		return ViewPathUtil.getForwardPath(BASE_PATH, WRITE_PATH);
 	}
 
@@ -85,13 +91,17 @@ public class BoardController {
 	public String write(Criteria criteria, BoardDto boardDto, RedirectAttributes attributes) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
-		String redirectPath = redirectIfNotLoginOrUserNotFound(userNum, attributes);
+		if (userNum == null) {
+			return ViewPathUtil.REDIRECT_LOGIN;
+		}
+
+		String redirectPath = redirectIfInvalidCategory(criteria, SessionUtil.isAdmin(session), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfInvalidCategory(criteria, SessionUtil.isAdmin(session), attributes);
+		redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -107,7 +117,7 @@ public class BoardController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
-			addBoardToFlash(boardDto, attributes);
+			attributes.addFlashAttribute(BOARD_KEY, boardDto);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, WRITE_PATH);
 		}
 	}
@@ -129,18 +139,21 @@ public class BoardController {
 		}
 
 		boardService.incrementBoardReadCount(boardNum);
-
 		setBoardDisplayData(boardDto);
-		model.addAttribute(BOARD_KEY, boardDto);
-
-		addUserIdToModel(SessionUtil.getSessionNum(session), model);
 		SessionUtil.addIsAdminToModel(model, session);
 
+		Optional.ofNullable(userService.findByUserNum(SessionUtil.getSessionNum(session)))
+				.ifPresent(userDto -> model.addAttribute("userId", userDto.getUserId()));
+
 		if (!DOWNLOAD_CATEGORY.equals(boardDto.getBoardCategory())) {
-			model.addAttribute("showImage", true);
-			addFilesToModel(boardNum, model);
+			Optional.ofNullable(fileService.findByBoardNum(boardNum)).ifPresent(files -> {
+				files.forEach(fileService::setFilePath);
+				model.addAttribute("files", files);
+				model.addAttribute("showImage", true);
+			});
 		}
 
+		model.addAttribute(BOARD_KEY, boardDto);
 		return ViewPathUtil.getForwardPath(BASE_PATH, DETAIL_PATH);
 	}
 
@@ -148,17 +161,21 @@ public class BoardController {
 	public String update(Criteria criteria, Long boardNum, RedirectAttributes attributes, Model model) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
-		String redirectPath = redirectIfNotLoginOrUserNotFound(userNum, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
+		if (userNum == null) {
+			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 
 		if (model.getAttribute(BOARD_KEY) != null) {
 			return ViewPathUtil.getForwardPath(BASE_PATH, UPDATE_PATH);
 		}
 
-		redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
+		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
+		redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -188,13 +205,17 @@ public class BoardController {
 		Long userNum = SessionUtil.getSessionNum(session);
 		Long boardNum = boardDto.getBoardNum();
 
-		String redirectPath = redirectIfNotLoginOrUserNotFound(userNum, attributes);
+		if (userNum == null) {
+			return ViewPathUtil.REDIRECT_LOGIN;
+		}
+
+		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
+		redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -203,7 +224,6 @@ public class BoardController {
 		boardDto.setUserNum(userNum);
 
 		try {
-
 			boardService.update(boardDto);
 			attributes.addAttribute(BOARD_NUM_KEY, boardNum);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, DETAIL_PATH);
@@ -234,13 +254,17 @@ public class BoardController {
 	public String delete(Criteria criteria, Long boardNum, RedirectAttributes attributes) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
-		String redirectPath = redirectIfNotLoginOrUserNotFound(userNum, attributes);
+		if (userNum == null) {
+			return ViewPathUtil.REDIRECT_LOGIN;
+		}
+
+		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
+		redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -272,17 +296,7 @@ public class BoardController {
 		return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, DETAIL_PATH);
 	}
 
-	private String redirectIfNotLoginOrUserNotFound(Long userNum, RedirectAttributes attributes) {
-		if (userNum == null) {
-			return ViewPathUtil.REDIRECT_LOGIN;
-		}
-
-		return redirectIfUserNotFound(userNum, attributes);
-	}
-
-	private String redirectIfUserNotFound(Long userNum, RedirectAttributes attributes) {
-		UserDto userDto = userService.findByUserNum(userNum);
-
+	private String redirectIfUserNotFound(UserDto userDto, RedirectAttributes attributes) {
 		if (userDto == null) {
 			session.invalidate();
 			MessageConstants.addErrorMessage(attributes, MessageConstants.USER_NOT_FOUND_MSG);
@@ -294,16 +308,10 @@ public class BoardController {
 
 	private String redirectIfNotBoardOwner(Long sessionUserNum, BoardDto boardDto, Criteria criteria,
 			RedirectAttributes attributes) {
-		String redirectPath = redirectIfBoardNumIsNull(boardDto.getBoardNum(), criteria, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
 		if (!Objects.equals(sessionUserNum, boardDto.getUserNum())) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.BOARD_NO_PERMISSION_MSG);
 			attributes.addAttribute(BOARD_NUM_KEY, boardDto.getBoardNum());
-			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
+			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, DETAIL_PATH);
 		}
 		return null;
 	}
@@ -324,18 +332,15 @@ public class BoardController {
 		return null;
 	}
 
-	private void addBoardToFlash(BoardDto boardDto, RedirectAttributes attributes) {
-		attributes.addFlashAttribute(BOARD_KEY, boardDto);
-	}
-
 	private String redirectIfInvalidCategory(Criteria criteria, boolean isAdmin, RedirectAttributes attributes) {
-		if (!isValidCategory(criteria.getCategory())) {
-			criteria.setCategory(DEFAULT_CATEGORY);
+		String category = criteria.getCategory();
+
+		if (!isValidCategory(category)) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.CATEGORY_NOT_FOUND_MSG);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
 		}
 
-		if (isAdminCategory(criteria.getCategory()) && !isAdmin) {
+		if (isAdminCategory(category) && !isAdmin) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.ADMIN_NOT_ALLOW_MSG);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
 		}
@@ -345,31 +350,20 @@ public class BoardController {
 
 	private void setCategory(Criteria criteria, Model model) {
 		String category = criteria.getCategory();
-		if (category == null || category.isBlank()) {
+
+		if (category == null || category.isEmpty()) {
 			criteria.setCategory(DEFAULT_CATEGORY);
 		}
 
-		if (!isValidCategory(category)) {
-
-			if (!model.containsAttribute(MessageConstants.KEY_MSG)) {
-				model.addAttribute(MessageConstants.KEY_MSG, MessageConstants.CATEGORY_NOT_FOUND_MSG);
-			}
-
-			criteria.setCategory(DEFAULT_CATEGORY);
+		if (isValidCategory(category)) {
+			return;
 		}
-	}
 
-	private void addFilesToModel(Long boardNum, Model model) {
-		List<FileDto> files = fileService.findByBoardNum(boardNum);
-		if (files != null && !files.isEmpty()) {
-			files.forEach(fileService::setFilePath);
-			model.addAttribute("files", files);
+		if (!model.containsAttribute(MessageConstants.KEY_MSG)) {
+			model.addAttribute(MessageConstants.KEY_MSG, MessageConstants.CATEGORY_NOT_FOUND_MSG);
 		}
-	}
 
-	private void addUserIdToModel(Long userNum, Model model) {
-		UserDto userDto = userService.findByUserNum(userNum);
-		model.addAttribute("userId", userDto == null ? "" : userDto.getUserId());
+		criteria.setCategory(DEFAULT_CATEGORY);
 	}
 
 	private void setBoardDisplayData(BoardDto boardDto) {

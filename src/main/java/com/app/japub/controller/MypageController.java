@@ -1,5 +1,7 @@
 package com.app.japub.controller;
 
+import java.util.Objects;
+
 import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
@@ -14,6 +16,7 @@ import com.app.japub.common.MessageConstants;
 import com.app.japub.common.SessionUtil;
 import com.app.japub.common.ViewPathUtil;
 import com.app.japub.domain.dto.UserDto;
+import com.app.japub.domain.service.user.PasswordService;
 import com.app.japub.domain.service.user.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class MypageController {
 	private final UserService userService;
 	private final HttpSession session;
+	private final PasswordService passwordService;
 	private static final String BASE_PATH = "mypage";
 	private static final String CHECK_PASSWORD_PATH = "check-password";
 	private static final String UPDATE_PATH = "update";
@@ -51,27 +55,28 @@ public class MypageController {
 	@PostMapping("/check-password")
 	public String checkPassword(String userPassword, String isDelete, RedirectAttributes attributes) {
 		Long userNum = SessionUtil.getSessionNum(session);
+
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 
-		boolean isSuccess = userService.findByUserNumAndUserPassword(userNum, userPassword) != null;
-		
-		if (isSuccess) {
-			FlashAttributeUtil.addSuccessToFlash(attributes);
-			return ViewPathUtil.getRedirectPath(null, BASE_PATH, parseBoolean(isDelete) ? DELETE_PATH : UPDATE_PATH);
-		}
-
 		UserDto userDto = userService.findByUserNum(userNum);
+
 		String redirectPath = redirectIfUserNotFound(userDto, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		MessageConstants.addErrorMessage(attributes, MessageConstants.WRONG_PASSWORD_MSG);
-		addDeleteToAttribute(parseBoolean(isDelete), attributes);
-		return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
+		boolean isSuccess = passwordService.matches(userPassword, userDto.getUserPassword());
+
+		if (!isSuccess) {
+			MessageConstants.addErrorMessage(attributes, MessageConstants.WRONG_PASSWORD_MSG);
+			return redirectToCheckPassword(attributes, parseBoolean(isDelete));
+		}
+
+		FlashAttributeUtil.addSuccessToFlash(attributes);
+		return ViewPathUtil.getRedirectPath(null, BASE_PATH, parseBoolean(isDelete) ? DELETE_PATH : UPDATE_PATH);
 	}
 
 	@GetMapping("/update")
@@ -102,14 +107,12 @@ public class MypageController {
 
 		if (!SessionUtil.isSuccess(session)) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
-			addDeleteToAttribute(isDelete, attributes);
-			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
+			return redirectToCheckPassword(attributes, isDelete);
 		}
 
-		if (!userNum.equals(userDto.getUserNum())) {
+		if (!Objects.equals(userNum, userDto.getUserNum())) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.PERMISSION_NOT_ALLOW_MSG);
-			addDeleteToAttribute(isDelete, attributes);
-			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
+			return redirectToCheckPassword(attributes, isDelete);
 		}
 
 		boolean isSuccess = isDelete ? userService.delete(userNum) : userService.update(userDto);
@@ -121,8 +124,8 @@ public class MypageController {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 
-		String redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes); // 2025 11-25 수정
-																										// 아직 수정배포전
+		String redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes); 
+																										
 		if (redirectPath != null) {
 			return redirectPath;
 		}
@@ -141,8 +144,7 @@ public class MypageController {
 
 		if (!FlashAttributeUtil.isSuccess(model)) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
-			addDeleteToAttribute(isDelete, attributes);
-			return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
+			return redirectToCheckPassword(attributes, isDelete);
 		}
 
 		UserDto userDto = userService.findByUserNum(userNum);
@@ -172,6 +174,11 @@ public class MypageController {
 
 	private boolean parseBoolean(String isDelete) {
 		return "true".equalsIgnoreCase(isDelete);
+	}
+
+	private String redirectToCheckPassword(RedirectAttributes attributes, boolean isDelete) {
+		attributes.addAttribute(KEY_DELETE, isDelete);
+		return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
 	}
 
 }
