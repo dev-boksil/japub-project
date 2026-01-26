@@ -140,7 +140,6 @@ public class BoardController {
 
 		boardService.incrementBoardReadCount(boardNum);
 		setBoardDisplayData(boardDto);
-		SessionUtil.addIsAdminToModel(model, session);
 
 		Optional.ofNullable(userService.findByUserNum(SessionUtil.getSessionNum(session)))
 				.ifPresent(userDto -> model.addAttribute("userId", userDto.getUserId()));
@@ -154,6 +153,7 @@ public class BoardController {
 		}
 
 		model.addAttribute(BOARD_KEY, boardDto);
+		SessionUtil.addIsAdminToModel(model, session);
 		return ViewPathUtil.getForwardPath(BASE_PATH, DETAIL_PATH);
 	}
 

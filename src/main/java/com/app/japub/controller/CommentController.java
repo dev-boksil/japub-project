@@ -36,17 +36,19 @@ public class CommentController {
 	private final HttpSession session;
 	private static final ResponseEntity<Void> SUCCESS_CODE = ResponseEntity.ok().build();
 	private static final ResponseEntity<Void> ERROR_CODE = ResponseEntity.badRequest().build();
+	private static final ResponseEntity<Void> LOGIN_ERROR_CODE = ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<Void> insert(@RequestBody CommentDto commentDto, Long boardNum) {
 		Long userNum = (Long) session.getAttribute(SessionUtil.KEY);
 
 		if (userNum == null) {
-			return ERROR_CODE;
+			return LOGIN_ERROR_CODE;
 		}
 
 		if (userService.findByUserNum(userNum) == null) {
-			return ResponseEntity.notFound().build();
+			session.invalidate();
+			return LOGIN_ERROR_CODE;
 		}
 
 		commentDto.setUserNum(userNum);
@@ -65,7 +67,8 @@ public class CommentController {
 		}
 
 		if (userService.findByUserNum(userNum) == null) {
-			return ResponseEntity.notFound().build();
+			session.invalidate();
+			return LOGIN_ERROR_CODE;
 		}
 
 		commentDto.setUserNum(userNum);
@@ -86,7 +89,8 @@ public class CommentController {
 		}
 
 		if (userService.findByUserNum(userNum) == null) {
-			return ResponseEntity.notFound().build();
+			session.invalidate();
+			return LOGIN_ERROR_CODE;
 		}
 
 		boolean isDeleted = SessionUtil.isAdmin(session) ? adminService.deleteByCommentNum(commentNum)

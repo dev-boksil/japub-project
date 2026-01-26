@@ -187,7 +187,7 @@ export function changeCss($input, isSuccess, msg) {
 }
 
 export function getValidationChecks() {
-	return { ...validationChecks };
+	return Object.assign({}, validationChecks);
 }
 
 

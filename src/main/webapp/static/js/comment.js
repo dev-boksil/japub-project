@@ -5,7 +5,8 @@ const commentService = (function() {
 			method: 'post',
 			contentType: 'application/json;charset=UTF-8',
 			data: JSON.stringify({ commentContent, commentParentNum, commentParentId }),
-			success: callback
+			success: callback,
+			error: xhr => errorCallback(xhr)
 		});
 	}
 
@@ -15,7 +16,8 @@ const commentService = (function() {
 			method: 'patch',
 			contentType: 'application/json;charset=UTF-8',
 			data: JSON.stringify({ commentContent }),
-			success: callback
+			success: callback,
+			error: xhr => errorCallback(xhr)
 		});
 	}
 
@@ -23,7 +25,8 @@ const commentService = (function() {
 		$.ajax({
 			url: `${contextPath}/comments/${commentNum}`,
 			method: 'delete',
-			success: callback
+			success: callback,
+			error: xhr => errorCallback(xhr)
 		});
 	}
 
@@ -37,6 +40,13 @@ const commentService = (function() {
 
 	return { insert, update, remove, getCommentsDto };
 })();
+
+function errorCallback(xhr) {
+	if (xhr.status == 401) {
+		alert("로그인 후 사용하실 수 있습니다.");
+		location.reload();
+	}
+}
 
 function resetUpdateLi($updateLi) {
 	const { $updateDoneBtn, $replyDoneBtn, $updateLiTextarea } = getEleToUpdateLi($updateLi);
@@ -116,11 +126,7 @@ function createCommentBtns(comment, sessionUserNum, isAdmin) {
 }
 
 function isLogin(sessionUserNum) {
-	if (sessionUserNum && sessionUserNum >= 0) {
-		return true;
-	} else {
-		false;
-	}
+	return !!sessionUserNum && sessionUserNum >= 0;
 }
 
 function elapsetTime(registerDate) {
@@ -172,6 +178,7 @@ function elapsetTime(registerDate) {
 
 	$commentUl.on("click", ".comment-remove-btn", function(e) { //삭제
 		e.preventDefault();
+		if (status.isEditing) return;
 		if (!confirm("정말로 삭제하시겠습니까?")) { return; }
 		const commentNum = $(this).closest("li").data("commentNum");
 		commentService.remove(commentNum, () => showComments($commentUl, boardNum, page));
