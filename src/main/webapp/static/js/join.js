@@ -84,33 +84,30 @@ function sample6_execDaumPostcode() {
 	$("input[name=userId]").on("blur", function() {
 		const $input = $(this);
 		const userId = $input.val().trim();
-		if (!userId || $input.prop("readonly")) { return; }
+		if (!userId || $input.prop("readOnly")) { return; }
 		const isSuccess = validateId(userId);
-		const msg = isSuccess ? "" : "잘못된 아이디 형식입니다.";
-		changeCss($input, isSuccess, msg);
+		changeCss($input, isSuccess, isSuccess ? "" : "잘못된 아이디 형식입니다.");
 		setValidationCheck($input, isSuccess);
-		if (!isSuccess) { return; }
+		if (!isSuccess) return;
 		joinService.checkId($input, userId);
 	});
 
 	$("input[name=userEmail]").on("blur", function(e) {
 		const $input = $(this);
 		const userEmail = $input.val().trim();
-		if (!userEmail || $input.prop("readonly")) { return; }
+		if (!userEmail || $input.prop("readOnly")) { return; }
 		const isSuccess = validateEmail(userEmail);
-		const msg = isSuccess ? "" : "잘못된 이메일 형식입니다.";
-		changeCss($input, isSuccess, msg);
+		changeCss($input, isSuccess, isSuccess ? "" : "잘못된 이메일 형식입니다.");
 		setValidationCheck($input, isSuccess);
-		if (!isSuccess) { return; }
+		if (!isSuccess) return;
 		joinService.checkEmail($input, userEmail);
 	});
 
 	$passwordInput.on("blur", function() {
 		const password = $passwordInput.val().trim();
-		if (!password || $passwordInput.prop("readonly")) { return; }
+		if (!password || $passwordInput.prop("readOnly")) return;
 		const isSuccess = validatePassword(password);
-		const msg = isSuccess ? "" : getPasswordErrorMsg(password);
-		changeCss($passwordInput, isSuccess, msg);
+		changeCss($passwordInput, isSuccess, isSuccess ? "" : getPasswordErrorMsg(password));
 		setValidationCheck($passwordInput, isSuccess);
 		$passwordCheckInput.trigger("blur");
 	});
@@ -118,20 +115,18 @@ function sample6_execDaumPostcode() {
 	$passwordCheckInput.on("blur", function() {
 		const passwordConfirm = $passwordCheckInput.val().trim();
 		const password = $passwordInput.val().trim();
-		if (!password || !passwordConfirm) { return; }
+		if (!password || !passwordConfirm) return;
 		const isSuccess = password === passwordConfirm;
-		const msg = isSuccess ? "" : "두 비밀번호가 서로 일치하지 않습니다.";
-		changeCss($passwordCheckInput, isSuccess, msg);
+		changeCss($passwordCheckInput, isSuccess, isSuccess ? "" : "두 비밀번호가 서로 일치하지 않습니다.");
 		setValidationCheck($passwordCheckInput, isSuccess);
 	});
 
 	$("input[name=userPhone]").on("blur", function() {
 		const $input = $(this);
 		const phone = $input.val().trim();
-		if (!phone || $input.prop("readonly")) { return; }
+		if (!phone || $input.prop("readOnly")) { return; }
 		const isSuccess = validatePhone(phone);
-		const msg = isSuccess ? "" : "잘못된 핸드폰번호 입니다.";
-		changeCss($input, isSuccess, msg);
+		changeCss($input, isSuccess, isSuccess ? "" : "잘못된 핸드폰번호 입니다.");
 		setValidationCheck($input, isSuccess);
 	});
 
@@ -168,9 +163,8 @@ function successCallback($input, isSuccess) {
 
 function errorCallback(xhr, $input) {
 	let name = getName($input);
-	name = name === '아이디' ? name + '를' : name + '을';
-	const msg = xhr.status == 400 ? `${name} 입력해 주세요.` : "요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
-	changeCss($input, false, msg);
+	name = name === '아이디' ? `${name}를` : `${name}을`;
+	changeCss($input, false, xhr.status == 400 ? `${name} 입력해 주세요.` : "요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
 	setValidationCheck($input, false);
 }
 

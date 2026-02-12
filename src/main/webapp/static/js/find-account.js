@@ -6,11 +6,11 @@ const clickService = (function() {
 		click = isClick;
 	}
 
-	function getClick() {
+	function isClick() {
 		return click;
 	}
 
-	return { setClick, getClick };
+	return { setClick, isClick };
 })();
 
 function findByUserEmail(userEmail) {
@@ -21,7 +21,7 @@ function findByUserEmail(userEmail) {
 		method: 'post',
 		contentType: 'application/json;charset=UTF-8',
 		data: JSON.stringify({ userEmail }),
-		beforeSend() { $dimmed.show(); },
+		beforeSend() { $dimmed.show(); clickService.setClick(true); },
 		complete() { $dimmed.hide(); clickService.setClick(false); },
 		success: msg => alert(msg),
 		error: xhr => alert(xhr.responseText)
@@ -38,12 +38,17 @@ function validateEmail(email) { /*이메일정규식*/
 
 $("a.find-btn-right").on("click", function(e) {
 	e.preventDefault();
-	if (clickService.getClick()) return;
+	if (clickService.isClick()) return;
 	const userEmail = $(this).closest("div.find-container").find("input[name=userEmail]").val().trim();
 	if (!userEmail) { alert("이메일을 입력해 주세요."); return; }
 	if (!validateEmail(userEmail)) { alert("잘못된 이메일 형식입니다."); return; }
-	clickService.setClick(true);
 	findByUserEmail(userEmail);
+});
+
+$(".find-btn").on("click", function(e) {
+	e.preventDefault();
+	if (clickService.isClick()) return;
+	location.href = $(this).attr("href");
 });
 
 $("form[name=find-user-form]").on("submit", function(e) {

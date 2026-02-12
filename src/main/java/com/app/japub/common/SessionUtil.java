@@ -43,24 +43,20 @@ public class SessionUtil {
 		session.setAttribute(SUCCESS_KEY, System.currentTimeMillis());
 	}
 
-	public static boolean checkSuccess(HttpSession session) {
+	public static boolean isSuccess(HttpSession session) {
 		Long time = (Long) session.getAttribute(SUCCESS_KEY);
+
 		if (time == null) {
 			return false;
 		}
+
 		Long gap = System.currentTimeMillis() - time;
-		if (gap < 0 || gap >= TTL) {
+
+		if (gap <= 0 || gap >= TTL) {
 			session.removeAttribute(SUCCESS_KEY);
 			return false;
 		}
-		return true;
-	}
 
-	public static boolean isSuccess(HttpSession session) {
-		if (!checkSuccess(session)) {
-			return false;
-		}
-		session.removeAttribute(SUCCESS_KEY);
 		return true;
 	}
 

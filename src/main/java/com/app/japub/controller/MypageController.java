@@ -71,8 +71,7 @@ public class MypageController {
 		boolean isSuccess = passwordService.matches(userPassword, userDto.getUserPassword());
 
 		if (!isSuccess) {
-			MessageConstants.addErrorMessage(attributes, MessageConstants.WRONG_PASSWORD_MSG);
-			return redirectToCheckPassword(attributes, parseBoolean(isDelete));
+			return redirectToCheckPassword(attributes, parseBoolean(isDelete), MessageConstants.WRONG_PASSWORD_MSG);
 		}
 
 		FlashAttributeUtil.addSuccessToFlash(attributes);
@@ -101,18 +100,17 @@ public class MypageController {
 
 	private String handleUpdateOrDelete(UserDto userDto, RedirectAttributes attributes, boolean isDelete) {
 		Long userNum = SessionUtil.getSessionNum(session);
+
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 
 		if (!SessionUtil.isSuccess(session)) {
-			MessageConstants.addErrorMessage(attributes, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
-			return redirectToCheckPassword(attributes, isDelete);
+			return redirectToCheckPassword(attributes, isDelete, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
 		}
 
 		if (!Objects.equals(userNum, userDto.getUserNum())) {
-			MessageConstants.addErrorMessage(attributes, MessageConstants.PERMISSION_NOT_ALLOW_MSG);
-			return redirectToCheckPassword(attributes, isDelete);
+			return redirectToCheckPassword(attributes, isDelete, MessageConstants.PERMISSION_NOT_ALLOW_MSG);
 		}
 
 		boolean isSuccess = isDelete ? userService.delete(userNum) : userService.update(userDto);
@@ -124,15 +122,13 @@ public class MypageController {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 
-		String redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes); 
-																										
+		String redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
+
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
-		addDeleteToAttribute(isDelete, attributes);
-		return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
+		return redirectToCheckPassword(attributes, isDelete, MessageConstants.ERROR_MSG);
 	}
 
 	private String getUpdateOrDeleteView(RedirectAttributes attributes, Model model, boolean isDelete) {
@@ -143,11 +139,11 @@ public class MypageController {
 		}
 
 		if (!FlashAttributeUtil.isSuccess(model)) {
-			MessageConstants.addErrorMessage(attributes, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
-			return redirectToCheckPassword(attributes, isDelete);
+			return redirectToCheckPassword(attributes, isDelete, MessageConstants.INVALID_ACCESS_OR_EXPIRED_MSG);
 		}
 
 		UserDto userDto = userService.findByUserNum(userNum);
+
 		String redirectPath = redirectIfUserNotFound(userDto, attributes);
 
 		if (redirectPath != null) {
@@ -168,16 +164,13 @@ public class MypageController {
 		return null;
 	}
 
-	private void addDeleteToAttribute(boolean isDelete, RedirectAttributes attributes) {
-		attributes.addAttribute(KEY_DELETE, isDelete);
-	}
-
 	private boolean parseBoolean(String isDelete) {
 		return "true".equalsIgnoreCase(isDelete);
 	}
 
-	private String redirectToCheckPassword(RedirectAttributes attributes, boolean isDelete) {
+	private String redirectToCheckPassword(RedirectAttributes attributes, boolean isDelete, String errorMsg) {
 		attributes.addAttribute(KEY_DELETE, isDelete);
+		MessageConstants.addErrorMessage(attributes, errorMsg);
 		return ViewPathUtil.getRedirectPath(null, BASE_PATH, CHECK_PASSWORD_PATH);
 	}
 
