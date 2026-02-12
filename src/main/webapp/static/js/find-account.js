@@ -45,7 +45,7 @@ $("a.find-btn-right").on("click", function(e) {
 	findByUserEmail(userEmail);
 });
 
-$(".find-btn").on("click", function(e) {
+$(".find-cancel-btn").on("click", function(e) {
 	e.preventDefault();
 	if (clickService.isClick()) return;
 	location.href = $(this).attr("href");
