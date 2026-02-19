@@ -6,7 +6,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
+<title>중앙경제평론사</title>
 <link rel="icon" href="<c:url value='/static/images/logo/favicon.png' />" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,9 +21,14 @@
 		<main class="main">
 			<div class="login-box">
 			      <header><img src="<c:url value='/static/images/logo/login-logo.jpg' />" width="60" height="60"/></header>
-			      <form name="loginForm" method="post">
+			      <form name="loginForm" action='<c:url value="/login"/>' method="post">
 				        <input type="text" name="userId" placeholder="아이디" value="${cookie.id.value}"/>
 				        <input type="password" name="userPassword" placeholder="비밀번호" />
+				        <input type="hidden" name="toUri" value="${criteria.toUri}" />
+				        <input type="hidden" name="type" value="${criteria.type}" />
+				        <input type="hidden" name="keyword" value="${criteria.keyword}" />
+				        <input type="hidden" name="category" value="${criteria.category}" />
+				        <input type="hidden" name="sort" value="${criteria.sort}" />
 				        <input type="submit" value="로그인" />
 				        <div>
 				          <label> <input type="checkbox" name="rememberId"  ${empty cookie.id.value ? '' : 'checked'}/>&nbsp아이디 기억 </label>

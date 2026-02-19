@@ -39,7 +39,7 @@ public class CommentController {
 	private static final ResponseEntity<Void> LOGIN_ERROR_CODE = ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Void> insert(@RequestBody CommentDto commentDto, Long boardNum) {
+	public ResponseEntity<Void> insert(@RequestBody CommentDto commentDto) {
 		Long userNum = (Long) session.getAttribute(SessionUtil.KEY);
 
 		if (userNum == null) {
@@ -52,7 +52,6 @@ public class CommentController {
 		}
 
 		commentDto.setUserNum(userNum);
-		commentDto.setBoardNum(boardNum);
 
 		return commentService.insert(commentDto) ? SUCCESS_CODE : ERROR_CODE;
 	}
@@ -66,18 +65,17 @@ public class CommentController {
 			return ERROR_CODE;
 		}
 
-		if (userService.findByUserNum(userNum) == null) {
-			session.invalidate();
-			return LOGIN_ERROR_CODE;
-		}
-
 		commentDto.setUserNum(userNum);
 		commentDto.setCommentNum(commentNum);
 
 		boolean isUpdated = SessionUtil.isAdmin(session) ? adminService.updateComment(commentDto)
 				: commentService.update(commentDto);
 
-		return isUpdated ? SUCCESS_CODE : ERROR_CODE;
+		if (isUpdated) {
+			return SUCCESS_CODE;
+		}
+
+		return userService.findByUserNum(userNum) == null ? LOGIN_ERROR_CODE : ERROR_CODE;
 	}
 
 	@DeleteMapping(value = "/{commentNum}")
@@ -88,15 +86,14 @@ public class CommentController {
 			return ERROR_CODE;
 		}
 
-		if (userService.findByUserNum(userNum) == null) {
-			session.invalidate();
-			return LOGIN_ERROR_CODE;
-		}
-
 		boolean isDeleted = SessionUtil.isAdmin(session) ? adminService.deleteByCommentNum(commentNum)
 				: commentService.delete(userNum, commentNum);
 
-		return isDeleted ? SUCCESS_CODE : ERROR_CODE;
+		if (isDeleted) {
+			return SUCCESS_CODE;
+		}
+
+		return userService.findByUserNum(userNum) == null ? LOGIN_ERROR_CODE : ERROR_CODE;
 	}
 
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)

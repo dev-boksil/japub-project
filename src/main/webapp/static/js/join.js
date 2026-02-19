@@ -136,6 +136,11 @@ function sample6_execDaumPostcode() {
 		if (hasFalse()) { alert("모든 항목을 정확히 입력해 주세요."); return; }
 		$(this).closest("form").submit();
 	});
+
+	$(".addr-btn").on("click", function(e) {
+		e.preventDefault();
+		sample6_execDaumPostcode()
+	});
 })();
 
 

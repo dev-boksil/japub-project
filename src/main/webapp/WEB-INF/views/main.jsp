@@ -7,7 +7,7 @@
   <meta charset="UTF-8">
   <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" /> -->
   <meta name="naver-site-verification" content="1b43d1a484c9c292a604407939f25d7af1e3b57d" />
-  <title>Insert title here</title>
+  <title>중앙경제평론사</title>
   <link rel="icon" href="<c:url value='/static/images/logo/favicon.png' />" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

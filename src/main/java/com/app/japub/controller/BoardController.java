@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
@@ -63,11 +64,12 @@ public class BoardController {
 	}
 
 	@GetMapping("/write")
-	public String write(Criteria criteria, RedirectAttributes attributes, Model model) {
+	public String write(Criteria criteria, HttpServletRequest req, RedirectAttributes attributes, Model model) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
 		if (userNum == null) {
-			return ViewPathUtil.REDIRECT_LOGIN;
+			criteria.setToUri(req.getRequestURI());
+			return ViewPathUtil.getRedirectPath(criteria, "login", "");
 		}
 
 		String redirectPath = redirectIfInvalidCategory(criteria, SessionUtil.isAdmin(session), attributes);
@@ -140,6 +142,8 @@ public class BoardController {
 
 		boardService.incrementBoardReadCount(boardNum);
 		setBoardDisplayData(boardDto);
+		model.addAttribute(BOARD_KEY, boardDto);
+		SessionUtil.addIsAdminToModel(model, session);
 
 		Optional.ofNullable(userService.findByUserNum(SessionUtil.getSessionNum(session)))
 				.ifPresent(userDto -> model.addAttribute("userId", userDto.getUserId()));
@@ -152,8 +156,6 @@ public class BoardController {
 			});
 		}
 
-		model.addAttribute(BOARD_KEY, boardDto);
-		SessionUtil.addIsAdminToModel(model, session);
 		return ViewPathUtil.getForwardPath(BASE_PATH, DETAIL_PATH);
 	}
 
@@ -165,17 +167,11 @@ public class BoardController {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 
-		if (model.getAttribute(BOARD_KEY) != null) {
+		if (model.containsAttribute(BOARD_KEY)) {
 			return ViewPathUtil.getForwardPath(BASE_PATH, UPDATE_PATH);
 		}
 
 		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
-		redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -195,6 +191,12 @@ public class BoardController {
 			return redirectPath;
 		}
 
+		redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
 		setBoardDisplayData(boardDto);
 		model.addAttribute(BOARD_KEY, boardDto);
 		return ViewPathUtil.getForwardPath(BASE_PATH, UPDATE_PATH);
@@ -203,19 +205,14 @@ public class BoardController {
 	@PostMapping("/update")
 	public String update(Criteria criteria, BoardDto boardDto, RedirectAttributes attributes, Model model) {
 		Long userNum = SessionUtil.getSessionNum(session);
-		Long boardNum = boardDto.getBoardNum();
 
 		if (userNum == null) {
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
 
+		Long boardNum = boardDto.getBoardNum();
+
 		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
-		redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -244,6 +241,12 @@ public class BoardController {
 				return redirectPath;
 			}
 
+			redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
+
+			if (redirectPath != null) {
+				return redirectPath;
+			}
+
 			MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
 			attributes.addFlashAttribute(BOARD_KEY, boardDto);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, UPDATE_PATH);
@@ -259,12 +262,6 @@ public class BoardController {
 		}
 
 		String redirectPath = redirectIfBoardNumIsNull(boardNum, criteria, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
-		redirectPath = redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -286,6 +283,12 @@ public class BoardController {
 		}
 
 		redirectPath = isAdmin ? null : redirectIfNotBoardOwner(userNum, boardDto, criteria, attributes);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
+		redirectPath = isAdmin ? null : redirectIfUserNotFound(userService.findByUserNum(userNum), attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;

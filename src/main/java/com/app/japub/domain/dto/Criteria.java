@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class Criteria {
 	private int page, amount, pageRange;
-	private String type, keyword, category, referrer, sort;
+	private String type, keyword, category, referrer, sort, toUri;
 
 	public Criteria() {
 		this(1, 10, 5, "recent");
@@ -34,7 +34,8 @@ public class Criteria {
 
 	public String getParams() {
 		return UriComponentsBuilder.newInstance().queryParam("page", page).queryParam("type", type)
-				.queryParam("keyword", keyword).queryParam("category", category).queryParam("sort", sort).toUriString();
+				.queryParam("keyword", keyword).queryParam("category", category).queryParam("sort", sort)
+				.queryParam("toUri", toUri).toUriString();
 	}
 
 }
