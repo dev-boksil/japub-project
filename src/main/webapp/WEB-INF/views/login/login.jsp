@@ -29,6 +29,8 @@
 				        <input type="hidden" name="keyword" value="${criteria.keyword}" />
 				        <input type="hidden" name="category" value="${criteria.category}" />
 				        <input type="hidden" name="sort" value="${criteria.sort}" />
+				        <input type="hidden" name="boardNum" value="${param.boardNum}" />
+				        <input type="hidden" name="productNum" value="${param.productNum}" />
 				        <input type="submit" value="로그인" />
 				        <div>
 				          <label> <input type="checkbox" name="rememberId"  ${empty cookie.id.value ? '' : 'checked'}/>&nbsp아이디 기억 </label>

@@ -26,7 +26,7 @@ public class MainController {
 
 	@GetMapping("/main")
 	public void main(Model model) {
-		List<ProductDto> recommendProducts = productService.findByProductIsRecommend(true);
+		List<ProductDto> recommendProducts = productService.findByRecommend();
 		recommendProducts.forEach(productService::setProductThumbnailPath);
 		model.addAttribute("recommendProducts", recommendProducts);
 

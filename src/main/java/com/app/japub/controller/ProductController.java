@@ -2,6 +2,7 @@ package com.app.japub.controller;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
@@ -19,7 +20,6 @@ import com.app.japub.common.ViewPathUtil;
 import com.app.japub.domain.dto.Criteria;
 import com.app.japub.domain.dto.PageDto;
 import com.app.japub.domain.dto.ProductDto;
-import com.app.japub.domain.service.file.FileService;
 import com.app.japub.domain.service.product.ProductService;
 import com.app.japub.domain.service.user.UserService;
 
@@ -55,8 +55,15 @@ public class ProductController {
 	}
 
 	@GetMapping("/register")
-	public String register(Criteria criteria, RedirectAttributes attributes) {
-		String redirectPath = redirectIfNoAccess(SessionUtil.getSessionNum(session), criteria, attributes);
+	public String register(Criteria criteria, RedirectAttributes attributes, HttpServletRequest req) {
+		Long userNum = SessionUtil.getSessionNum(session);
+
+		if (userNum == null) {
+			criteria.setToUri(req.getRequestURI());
+			return ViewPathUtil.getRedirectPath(criteria, "login", null);
+		}
+
+		String redirectPath = redirectIfNotAdmin(attributes, criteria);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -76,12 +83,18 @@ public class ProductController {
 			return redirectPath;
 		}
 
+		redirectPath = redirectIfUserNotFound(userNum, attributes);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
 		boolean isInserted = productService.insert(multipartFile, productDto, DEFAULT_DIRECTORY,
 				DateUtil.getDatePath());
 
 		if (!isInserted) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
-			addProductToFlash(productDto, attributes);
+			attributes.addFlashAttribute(PRDOUCT_KEY, productDto);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, REGISTER_PATH);
 		}
 
@@ -89,21 +102,36 @@ public class ProductController {
 	}
 
 	@GetMapping("/update")
-	public String update(Criteria criteria, Long productNum, Model model, RedirectAttributes attributes) {
-		String redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
+	public String update(Criteria criteria, Long productNum, Model model, RedirectAttributes attributes,
+			HttpServletRequest req) {
+		Long userNum = SessionUtil.getSessionNum(session);
+
+		if (userNum == null) {
+			criteria.setToUri(req.getRequestURI());
+			attributes.addAttribute("productNum", productNum);
+			return "redirect:/login" + criteria.getParams();
+		}
+
+		String redirectPath = redirectIfNotAdmin(attributes, criteria);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfNoAccess(SessionUtil.getSessionNum(session), criteria, attributes);
+		redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		if (model.getAttribute(PRDOUCT_KEY) != null) {
+		if (model.containsAttribute(PRDOUCT_KEY)) { // post update 오류시 기존 작성값 기억하기
 			return ViewPathUtil.getForwardPath(BASE_PATH, UPDATE_PATH);
+		}
+
+		redirectPath = redirectIfUserNotFound(userNum, attributes);
+
+		if (redirectPath != null) {
+			return redirectPath;
 		}
 
 		ProductDto productDto = productService.findByProductNum(productNum);
@@ -123,15 +151,22 @@ public class ProductController {
 	@PostMapping("/update")
 	public String update(MultipartFile multipartFile, Criteria criteria, ProductDto productDto,
 			RedirectAttributes attributes) {
+		Long userNum = SessionUtil.getSessionNum(session);
 		Long productNum = productDto.getProductNum();
 
-		String redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
+		String redirectPath = redirectIfNoAccess(userNum, criteria, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfNoAccess(SessionUtil.getSessionNum(session), criteria, attributes);
+		redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
+		redirectPath = redirectIfUserNotFound(userNum, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -150,31 +185,37 @@ public class ProductController {
 		}
 		// 그외오류
 		MessageConstants.addErrorMessage(attributes, MessageConstants.ERROR_MSG);
-		addProductToFlash(productDto, attributes);
-		attributes.addAttribute("productNum", productNum);
+		attributes.addFlashAttribute(PRDOUCT_KEY, productDto);
 		return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, UPDATE_PATH);
-
 	}
 
 	@GetMapping("/recommend/add")
 	public String recommend(Criteria criteria, Long productNum, RedirectAttributes attributes) {
-		String redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
+		Long userNum = SessionUtil.getSessionNum(session);
+
+		String redirectPath = redirectIfNoAccess(userNum, criteria, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfNoAccess(SessionUtil.getSessionNum(session), criteria, attributes);
+		redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		int recommendSize = productService.findByProductIsRecommend(true).size();
+		int recommendSize = productService.findByRecommend().size();
 
 		if (MAX_RECOMMEND_SIZE <= recommendSize) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.MAX_RECOMMEND_MSG);
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
+		}
+
+		redirectPath = redirectIfUserNotFound(userNum, attributes);
+
+		if (redirectPath != null) {
+			return redirectPath;
 		}
 
 		boolean isSuccess = productService.updateProductIsRecommend(productNum, true);
@@ -196,13 +237,21 @@ public class ProductController {
 
 	@PostMapping("/recommend/cancel")
 	public String recommendCancel(Criteria criteria, Long productNum, RedirectAttributes attributes) {
-		String redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
+		Long userNum = SessionUtil.getSessionNum(session);
+
+		String redirectPath = redirectIfNoAccess(userNum, criteria, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfNoAccess(SessionUtil.getSessionNum(session), criteria, attributes);
+		redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
+		redirectPath = redirectIfUserNotFound(userNum, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -227,14 +276,21 @@ public class ProductController {
 
 	@GetMapping("/delete")
 	public String delete(Criteria criteria, Long productNum, RedirectAttributes attributes) {
+		Long userNum = SessionUtil.getSessionNum(session);
 
-		String redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
+		String redirectPath = redirectIfNoAccess(userNum, criteria, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfNoAccess(SessionUtil.getSessionNum(session), criteria, attributes);
+		redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
+
+		if (redirectPath != null) {
+			return redirectPath;
+		}
+
+		redirectPath = redirectIfUserNotFound(userNum, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -267,13 +323,6 @@ public class ProductController {
 		if (redirectPath != null) {
 			return redirectPath;
 		}
-
-		redirectPath = redirectIfUserNotFound(userNum, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
 		return null;
 	}
 
@@ -283,6 +332,7 @@ public class ProductController {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.USER_NOT_FOUND_MSG);
 			return ViewPathUtil.REDIRECT_LOGIN;
 		}
+
 		return null;
 	}
 
@@ -312,12 +362,10 @@ public class ProductController {
 
 	private void setSort(Criteria criteria) {
 		String sort = criteria.getSort();
+
 		if (sort == null || sort.isEmpty()) {
 			criteria.setSort(DEFAULT_SORT);
 		}
 	}
 
-	private void addProductToFlash(ProductDto productDto, RedirectAttributes attributes) {
-		attributes.addFlashAttribute(PRDOUCT_KEY, productDto);
-	}
 }

@@ -1,11 +1,11 @@
 (function() {
 	const $productForm = $("form[name=productForm]");
+	let isClick = false;
 
 	$("a.page").on("click", function(e) {
 		e.preventDefault();
 		const page = $(this).attr("href");
-		$productForm.find("input[name=page]").val(page);
-		$productForm.submit();
+		$productForm.find("input[name=page]").val(page).submit();
 	});
 
 	$(".sort-key > a").on("click", function(e) {
@@ -26,19 +26,19 @@
 		e.preventDefault();
 		const $btn = $(this);
 		const $li = $btn.closest("li");
-		if ($btn.prop("disabled")) { return; }
+		if (isClick) { return; }
 		if (!confirm("이 상품을 추천 도서로 지정하시겠습니까?")) { return; }
 		if ($li.data("isRecommend")) { alert("이미 추천 도서로 지정된 상품입니다."); return; }
-		$btn.prop("disabled", true);
+		isClick = true;
 		location.href = $btn.attr("href");
 	});
 
 	$(".product-search-btn").on("click", function(e) {
 		e.preventDefault();
-		const $form = $(this).closest("form");
 		const keyword = $form.find("input[name=keyword]").val().trim();
 		if (!keyword) { alert("검색어를 입력하세요"); return; }
-		$form.submit();
+		$(this).closest("form").submit();
 	});
-	
+
 })();
+

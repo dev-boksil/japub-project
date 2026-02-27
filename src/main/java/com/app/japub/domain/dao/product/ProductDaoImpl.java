@@ -46,8 +46,8 @@ public class ProductDaoImpl implements ProductDao {
 	}
 
 	@Override
-	public List<ProductDto> findByProductIsRecommend(boolean productIsRecommend) {
-		return productMapper.findByProductIsRecommend(productIsRecommend);
+	public List<ProductDto> findByRecommend() {
+		return productMapper.findByRecommend();
 	}
 
 	@Override

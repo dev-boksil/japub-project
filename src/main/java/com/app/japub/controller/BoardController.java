@@ -69,7 +69,7 @@ public class BoardController {
 
 		if (userNum == null) {
 			criteria.setToUri(req.getRequestURI());
-			return ViewPathUtil.getRedirectPath(criteria, "login", "");
+			return ViewPathUtil.getRedirectPath(criteria, "login", null);
 		}
 
 		String redirectPath = redirectIfInvalidCategory(criteria, SessionUtil.isAdmin(session), attributes);
@@ -160,11 +160,14 @@ public class BoardController {
 	}
 
 	@GetMapping("/update")
-	public String update(Criteria criteria, Long boardNum, RedirectAttributes attributes, Model model) {
+	public String update(Criteria criteria, Long boardNum, RedirectAttributes attributes, HttpServletRequest req,
+			Model model) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
 		if (userNum == null) {
-			return ViewPathUtil.REDIRECT_LOGIN;
+			criteria.setToUri(req.getRequestURI());
+			attributes.addAttribute(BOARD_NUM_KEY, boardNum);
+			return ViewPathUtil.getRedirectPath(criteria, "login", null);
 		}
 
 		if (model.containsAttribute(BOARD_KEY)) {

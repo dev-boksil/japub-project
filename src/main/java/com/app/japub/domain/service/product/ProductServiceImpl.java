@@ -102,8 +102,8 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public List<ProductDto> findByProductIsRecommend(boolean productIsRecommend) {
-		return productDao.findByProductIsRecommend(productIsRecommend);
+	public List<ProductDto> findByRecommend() {
+		return productDao.findByRecommend();
 	}
 
 	@Override

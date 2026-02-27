@@ -68,6 +68,7 @@ public class FileServiceImpl implements FileService {
 	@Override
 	public File getUploadPath(String parent, String child) {
 		File uploadPath = new File(parent, child);
+
 		if (!uploadPath.exists()) {
 			uploadPath.mkdirs();
 		}
@@ -86,7 +87,7 @@ public class FileServiceImpl implements FileService {
 
 	@Override
 	public String getContentType(File file) {
-		String contentType;
+		String contentType = "";
 
 		try {
 			contentType = Files.probeContentType(file.toPath());
@@ -107,18 +108,14 @@ public class FileServiceImpl implements FileService {
 			switch (extension) {
 			case "jpg":
 			case "jpeg":
-				contentType = "image/jpeg";
-				break;
+				return "image/jpeg";
 			case "png":
-				contentType = "image/png";
-				break;
+				return "image/png";
 			case "gif":
-				contentType = "image/gif";
-				break;
+				return "image/gif";
 			default:
 				throw new RuntimeException("fileService getContentType no match extension error");
 			}
-			return contentType;
 		}
 
 		if (!contentType.startsWith("image/")) {
@@ -143,20 +140,26 @@ public class FileServiceImpl implements FileService {
 		String fileUuid = UUID.randomUUID().toString();
 		String originalFileName = multipartFile.getOriginalFilename();
 		String fileName = fileUuid + "_" + originalFileName;
+
 		File uploadPath = getUploadPath(directoryPath, datePath);
 		File file = new File(uploadPath, fileName);
+
 		try {
 			multipartFile.transferTo(file);
+
 			FileDto fileDto = new FileDto();
 			fileDto.setFileUuid(fileUuid);
 			fileDto.setFileName(originalFileName);
 			fileDto.setFileSize(multipartFile.getSize());
 			fileDto.setFileUploadPath(datePath);
+
 			if (isImage(file)) {
 				fileDto.setFileType(true);
 				createThumbnails(file, new File(uploadPath, "t_" + fileName), THUMBNAIL_SIZE);
 			}
+
 			return fileDto;
+
 		} catch (Exception e) {
 			throw new RuntimeException("fileService upload error", e);
 		}
@@ -167,8 +170,10 @@ public class FileServiceImpl implements FileService {
 		List<Path> paths = new ArrayList<>();
 		yesterDayFiles.stream().map(file -> Paths.get(directoryPath, getFilePath(file))).forEach(paths::add);
 		yesterDayFiles.stream().map(file -> Paths.get(directoryPath, getFileThumbnailPath(file))).forEach(paths::add);
+
 		File[] files = new File(directoryPath, yesterdayPath).listFiles();
 		files = files == null ? new File[0] : files;
+
 		Arrays.stream(files).filter(file -> !paths.contains(file.toPath())).forEach(File::delete);
 	}
 
