@@ -29,11 +29,6 @@ public class FindAccountController {
 
 	@GetMapping()
 	public String findAccount(RedirectAttributes attributes) {
-		Long userNum = SessionUtil.getSessionNum(session);
-		if (userNum != null) {
-			MessageConstants.addErrorMessage(attributes, MessageConstants.ALREADY_LOGGED_IN_MSG);
-			return ViewPathUtil.getRedirectMainPath();
-		}
 		return "find/find-account";
 	}
 
@@ -53,6 +48,7 @@ public class FindAccountController {
 
 		try {
 			userService.setUserPasswordAndSendMail(userByEmail);
+			session.invalidate();
 			return new ResponseEntity<String>("입력하신 이메일로 아이디와 임시 비밀번호를 전송하였습니다.", HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<String>("메일 전송중 오류가 발생하였습니다 잠시후 다시 시도해 주세요.", HttpStatus.INTERNAL_SERVER_ERROR);

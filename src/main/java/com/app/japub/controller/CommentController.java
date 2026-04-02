@@ -75,7 +75,12 @@ public class CommentController {
 			return SUCCESS_CODE;
 		}
 
-		return userService.findByUserNum(userNum) == null ? LOGIN_ERROR_CODE : ERROR_CODE;
+		if (userService.findByUserNum(userNum) == null) {
+			session.invalidate();
+			return LOGIN_ERROR_CODE;
+		}
+
+		return ERROR_CODE;
 	}
 
 	@DeleteMapping(value = "/{commentNum}")
@@ -93,7 +98,12 @@ public class CommentController {
 			return SUCCESS_CODE;
 		}
 
-		return userService.findByUserNum(userNum) == null ? LOGIN_ERROR_CODE : ERROR_CODE;
+		if (userService.findByUserNum(userNum) == null) {
+			session.invalidate();
+			return LOGIN_ERROR_CODE;
+		}
+
+		return ERROR_CODE;
 	}
 
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)

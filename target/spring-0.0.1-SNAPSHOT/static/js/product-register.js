@@ -1,16 +1,18 @@
 (function() {
 
-	$("input[name=multipartFile]").on("change", function() {
+	$("input[name=multipartFile]").on("change", function(e) {
 		const $thumbnail = $(".thumbnail-preview");
-		const $input = $(this);
-		const file = $input[0].files[0];
+		const file = e.target.files[0];
+
 		if (!file) { return; }
+
 		if (!file.type.startsWith("image/")) {
 			alert("이미지형식만 업로드 가능합니다.");
 			$thumbnail.hide();
 			$input.val("");
 			return;
 		}
+
 		const reader = new FileReader();
 		reader.onload = (e) => { $thumbnail.attr("src", e.target.result).show(); }
 		reader.readAsDataURL(file);
@@ -24,9 +26,8 @@
 
 	$(".product-register-btn, .product-update-btn").on("click", function(e) {
 		e.preventDefault();
-		const $btn = $(this);
-		const $form = $btn.closest("form");
-		const isUpdate = $btn.data("update");
+		const $form = $(this).closest("form");
+		const isUpdate = $(this).data("update");
 		if (!validateProductForm($form, isUpdate)) { return; }
 		$form.submit();
 	});

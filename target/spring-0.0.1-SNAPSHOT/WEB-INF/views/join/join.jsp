@@ -5,7 +5,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Insert title here</title>
+  <title>중앙경제평론사</title>
   <link rel="icon" href="<c:url value='/static/images/logo/favicon.png' />" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -50,7 +50,7 @@
         <div class="find-address">
           <div>
             <input type="text" id="sample6_postcode" name="userZipCode" placeholder="우편번호 (선택사항)" value="${user.userZipCode}" />
-            <input type="button" onclick="sample6_execDaumPostcode()" value="검색" />
+            <input type="button" class="addr-btn" onclick="" value="검색" />
           </div>
           <form:errors path="userZipCode" cssClass="error-msg" />
         </div>

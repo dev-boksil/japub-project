@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.app.japub.common.DateUtil;
+import com.app.japub.common.SessionUtil;
 import com.app.japub.domain.dto.FileDto;
 import com.app.japub.domain.service.file.FileService;
 
@@ -34,6 +37,7 @@ public class FileController {
 	private final FileService fileService;
 	private static final String FILES_DIRECTORY = "C:/upload/files";
 	private static final String DOWNLOAD_DIRECTORY = "C:/upload/download";
+	private final HttpSession session;
 
 	@GetMapping("/display")
 	public ResponseEntity<byte[]> display(String filePath, String category) throws IOException {
@@ -74,6 +78,10 @@ public class FileController {
 
 	@PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<List<FileDto>> upload(List<MultipartFile> multipartFiles, String category) {
+		if (!SessionUtil.isLogin(session)) {
+			return new ResponseEntity<List<FileDto>>(HttpStatus.UNAUTHORIZED);
+		}
+
 		List<FileDto> files = new ArrayList<>();
 
 		if (multipartFiles != null && !multipartFiles.isEmpty()) {

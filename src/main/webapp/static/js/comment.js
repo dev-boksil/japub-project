@@ -126,7 +126,7 @@ function createCommentBtns(comment, sessionUserNum, isAdmin) {
 }
 
 function isLogin(sessionUserNum) {
-	return !!sessionUserNum && sessionUserNum >= 0;
+	return sessionUserNum != null && sessionUserNum >= 0;
 }
 
 function elapsetTime(registerDate) {

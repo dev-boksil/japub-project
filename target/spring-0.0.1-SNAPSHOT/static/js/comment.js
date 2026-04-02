@@ -1,11 +1,12 @@
 const commentService = (function() {
-	function insert(boardNum, { commentContent, commentParentNum, commentParentId }, callback) {
+	function insert({ boardNum, commentContent, commentParentNum, commentParentId }, callback) {
 		$.ajax({
-			url: `${contextPath}/comments?boardNum=${boardNum}`,
+			url: `${contextPath}/comments`,
 			method: 'post',
 			contentType: 'application/json;charset=UTF-8',
-			data: JSON.stringify({ commentContent, commentParentNum, commentParentId }),
-			success: callback
+			data: JSON.stringify({ boardNum, commentContent, commentParentNum, commentParentId }),
+			success: callback,
+			error: xhr => errorCallback(xhr)
 		});
 	}
 
@@ -15,7 +16,8 @@ const commentService = (function() {
 			method: 'patch',
 			contentType: 'application/json;charset=UTF-8',
 			data: JSON.stringify({ commentContent }),
-			success: callback
+			success: callback,
+			error: xhr => errorCallback(xhr)
 		});
 	}
 
@@ -23,7 +25,8 @@ const commentService = (function() {
 		$.ajax({
 			url: `${contextPath}/comments/${commentNum}`,
 			method: 'delete',
-			success: callback
+			success: callback,
+			error: xhr => errorCallback(xhr)
 		});
 	}
 
@@ -37,6 +40,13 @@ const commentService = (function() {
 
 	return { insert, update, remove, getCommentsDto };
 })();
+
+function errorCallback(xhr) {
+	if (xhr.status == 401) {
+		alert("로그인 후 사용하실 수 있습니다.");
+		location.reload();
+	}
+}
 
 function resetUpdateLi($updateLi) {
 	const { $updateDoneBtn, $replyDoneBtn, $updateLiTextarea } = getEleToUpdateLi($updateLi);
@@ -116,11 +126,7 @@ function createCommentBtns(comment, sessionUserNum, isAdmin) {
 }
 
 function isLogin(sessionUserNum) {
-	if (sessionUserNum && sessionUserNum >= 0) {
-		return true;
-	} else {
-		false;
-	}
+	return !!sessionUserNum && sessionUserNum >= 0;
 }
 
 function elapsetTime(registerDate) {
@@ -147,8 +153,8 @@ function elapsetTime(registerDate) {
 	const boardNum = $(".container").data("boardNum");
 	const $updateLi = $(".update-li");
 	const $commentUl = $("ul.comment-ul");
-	const status = { isEditing: false };
 	const { $cancelBtn, $updateDoneBtn, $replyDoneBtn, $updateLiTextarea } = getEleToUpdateLi($updateLi);
+	let click = false;
 	let page = 1;
 	showComments($commentUl, boardNum, page);
 
@@ -158,7 +164,7 @@ function elapsetTime(registerDate) {
 		if (!isLogin(sessionUserNum)) { alert("로그인 후 사용하실 수 있습니다."); $insertTextarea.val(""); return; }
 		const commentContent = $insertTextarea.val().trim();
 		if (!commentContent) { alert("댓글을 입력해주세요"); return; }
-		commentService.insert(boardNum, { commentContent }, () => {
+		commentService.insert({ boardNum, commentContent }, () => {
 			$insertTextarea.val("");
 			showComments($commentUl, boardNum, page);
 		});
@@ -167,11 +173,12 @@ function elapsetTime(registerDate) {
 	$cancelBtn.on("click", function(e) { //취소
 		e.preventDefault();
 		resetUpdateLi($updateLi);
-		status.isEditing = false;
+		click = false;
 	});
 
 	$commentUl.on("click", ".comment-remove-btn", function(e) { //삭제
 		e.preventDefault();
+		if (click) return;
 		if (!confirm("정말로 삭제하시겠습니까?")) { return; }
 		const commentNum = $(this).closest("li").data("commentNum");
 		commentService.remove(commentNum, () => showComments($commentUl, boardNum, page));
@@ -179,20 +186,19 @@ function elapsetTime(registerDate) {
 
 	$commentUl.on("click", ".comment-update-btn", function(e) { //수정
 		e.preventDefault();
-		if (status.isEditing) { return; }
-		status.isEditing = true;
+		if (click) { return; }
+		click = true;
 		const $li = $(this).closest("li");
 		$updateLi.data("commentNum", $li.data("commentNum"))
-		const commentContent = $li.find("span.comment-content").text();
-		$updateLiTextarea.val(commentContent);
+		$updateLiTextarea.val($li.find("span.comment-content").text());
 		$li.hide().after($updateLi);
 		$updateLi.show();
 	});
 
 	$commentUl.on("click", ".comment-reply-btn", function(e) { //답글수정
 		e.preventDefault();
-		if (status.isEditing) { return; }
-		status.isEditing = true;
+		if (click) { return; }
+		click = true;
 		const $li = $(this).closest("li");
 		$updateLi.data("parentNum", $li.data("commentNum")).data("parentId", $li.data("userId"));
 		$replyDoneBtn.css("display", "inline-block");
@@ -208,7 +214,7 @@ function elapsetTime(registerDate) {
 		const commentNum = $updateLi.data("commentNum");
 		commentService.update(commentNum, commentContent, () => {
 			resetUpdateLi($updateLi);
-			status.isEditing = false;
+			click = false;
 			showComments($commentUl, boardNum, page);
 		});
 	});
@@ -218,13 +224,14 @@ function elapsetTime(registerDate) {
 		const commentContent = $updateLiTextarea.val().trim();
 		if (!commentContent) { alert("댓글을 입력하세요."); return; }
 		const comment = {
+			boardNum,
 			commentContent,
 			commentParentNum: $updateLi.data("parentNum"),
 			commentParentId: $updateLi.data("parentId")
 		}
-		commentService.insert(boardNum, comment, () => {
+		commentService.insert(comment, () => {
 			resetUpdateLi($updateLi);
-			status.isEditing = false;
+			click = false;
 			showComments($commentUl, boardNum, page);
 		});
 	});

@@ -5,7 +5,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Insert title here</title>
+  <title>중앙경제평론사</title>
   <link rel="icon" href="<c:url value='/static/images/logo/favicon.png' />" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -48,7 +48,7 @@
       </div>
 
       <div class="find-footer">
-        <a href="<c:url value='/login' />" class="find-btn">취소</a>
+        <a href="<c:url value='/login' />" class="find-btn find-cancel-btn">취소</a>
         <a href="" class="find-btn find-btn-right">찾기</a>
       </div>
     </div>

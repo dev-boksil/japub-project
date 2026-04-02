@@ -1,23 +1,22 @@
-import { getClassNames, createHiddenInputs, showThumbnails } from "./file.js";
+import { classNames, createHiddenInputs, showThumbnails } from "./file.js";
 
 (function() {
-	const $container = $(".container");
-	const boardNum = $container.data("boardNum");
-	const isShowThumbnails = "download" === $container.data("boardCategory")
-	const isDetail = $container.data("boardDetail");
+	const boardNum = $(".container").data("boardNum");
+	const category = $(".container").data("boardCategory")
+	const isDetail = $(".container").data("boardDetail");
+
 	if (isUpdate()) showThumbnails(boardNum, false);
-	if (isShowThumbnails && isDetail) showThumbnails(boardNum, true);
+	if (isDetail && ("download" === category)) showThumbnails(boardNum, true);
 })();
 
 
 (function() {
-	
+
 	$(".write-board-btn, .update-board-btn").on("click", function(e) {
 		e.preventDefault();
 		const $form = $(this).closest("form");
 		if (!validateForm($form)) return;
-		const { ORIGINAL, NEW, REMOVE } = getClassNames();
-		const html = isUpdate() ? createHiddenInputs(NEW) + createHiddenInputs(REMOVE) : createHiddenInputs(ORIGINAL);
+		const html = isUpdate() ? createHiddenInputs(classNames.NEW) + createHiddenInputs(classNames.REMOVE) : createHiddenInputs(classNames.ORIGINAL);
 		$form.append(html).submit();
 	});
 

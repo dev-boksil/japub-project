@@ -34,7 +34,7 @@
 		</where>
 	</select>
 	
-	<select id="findByProductIsRecommend" resultType="productDto">
+	<select id="findByRecommend" resultType="productDto">
 		SELECT product_num, product_uuid, product_name, product_upload_path, product_title, product_price, product_url, 
 		product_category, product_register_date, product_update_date,product_is_recommend
 		FROM tbl_product WHERE product_is_recommend = 1
@@ -84,18 +84,19 @@
 	</sql>
 	
 	<sql id="sort">
+	       ORDER BY
 			<choose>
-				<when test="sort == 'recent'.toString()">
-					ORDER BY product_num DESC
+				<when test="sort == null or sort == '' or sort == 'recent'.toString()">
+					 product_num DESC
 				</when>
 				<when test="sort == 'low_price'.toString()">
-					ORDER BY product_price asc, product_num DESC
+					product_price ASC, product_num DESC
 				</when>
 				<when test="sort == 'high_price'.toString()">
-					ORDER BY product_price desc, product_num DESC
+					product_price DESC, product_num DESC
 				</when>
 				<otherwise>
-					ORDER BY product_num DESC
+					product_num DESC
 				</otherwise>
 			</choose>
 	</sql>

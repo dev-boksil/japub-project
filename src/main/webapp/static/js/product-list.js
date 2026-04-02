@@ -5,7 +5,8 @@
 	$("a.page").on("click", function(e) {
 		e.preventDefault();
 		const page = $(this).attr("href");
-		$productForm.find("input[name=page]").val(page).submit();
+		$productForm.find("input[name=page]").val(page);
+		$productForm.submit();
 	});
 
 	$(".sort-key > a").on("click", function(e) {
