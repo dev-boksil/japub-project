@@ -15,5 +15,7 @@
 		<typeAlias type="com.app.japub.domain.dto.Criteria" alias="criteria"/>
 		<typeAlias type="com.app.japub.domain.dto.FileDto" alias="fileDto"/>
 		<typeAlias type="com.app.japub.domain.dto.ProductDto" alias="productDto"/>
+		<typeAlias type="com.app.japub.domain.dto.ScheduleDto" alias="scheduleDto"/>
+		<typeAlias type="com.app.japub.domain.dto.SchedulesDto" alias="schedulesDto"/>
 	</typeAliases>
 </configuration>

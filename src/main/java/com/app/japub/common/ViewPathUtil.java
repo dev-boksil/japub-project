@@ -8,7 +8,7 @@ public class ViewPathUtil {
 
 	public static String getRedirectPath(Criteria criteria, String basePath, String subPath) {
 		String params = criteria == null ? "" : criteria.getParams();
-		return "redirect:/" + basePath + "/" + (subPath == null ? "" : subPath) + params;
+		return "redirect:/" + basePath + (subPath == null ? "" : "/" + subPath) + params;
 	}
 
 	public static String getForwardPath(String basePath, String subPath) {

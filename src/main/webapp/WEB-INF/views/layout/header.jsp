@@ -76,6 +76,7 @@
           <a href="#">관리자페이지</a>
           <ul class="submenu">
             <li><a href="<c:url value='/products/register' />">상품등록</a></li>
+            <li><a href="<c:url value='/schedules/list' />">스케줄관리</a></li>
           </ul>
         </li>
       </c:if>

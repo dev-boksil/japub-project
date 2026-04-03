@@ -45,7 +45,6 @@ public class ProductController {
 
 	@GetMapping("/list")
 	public void list(Criteria criteria, Model model) {
-		setSort(criteria);
 		criteria.setAmount(DEFAULT_AMOUNT);
 		List<ProductDto> products = productService.findByCriteria(criteria);
 		products.forEach(productService::setProductDiscountPrice);
@@ -83,12 +82,6 @@ public class ProductController {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfUserNotFound(userNum, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
 		boolean isInserted = productService.insert(multipartFile, productDto, DEFAULT_DIRECTORY,
 				DateUtil.getDatePath());
 
@@ -109,7 +102,7 @@ public class ProductController {
 		if (userNum == null) {
 			criteria.setToUri(req.getRequestURI());
 			attributes.addAttribute("productNum", productNum);
-			return "redirect:/login" + criteria.getParams();
+			return ViewPathUtil.getRedirectPath(criteria, "login", null);
 		}
 
 		String redirectPath = redirectIfNotAdmin(attributes, criteria);
@@ -126,12 +119,6 @@ public class ProductController {
 
 		if (model.containsAttribute(PRDOUCT_KEY)) { // post update 오류시 기존 작성값 기억하기
 			return ViewPathUtil.getForwardPath(BASE_PATH, UPDATE_PATH);
-		}
-
-		redirectPath = redirectIfUserNotFound(userNum, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
 		}
 
 		ProductDto productDto = productService.findByProductNum(productNum);
@@ -161,12 +148,6 @@ public class ProductController {
 		}
 
 		redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
-		redirectPath = redirectIfUserNotFound(userNum, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -212,12 +193,6 @@ public class ProductController {
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
 		}
 
-		redirectPath = redirectIfUserNotFound(userNum, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
 		boolean isSuccess = productService.updateProductIsRecommend(productNum, true);
 
 		if (isSuccess) {
@@ -246,12 +221,6 @@ public class ProductController {
 		}
 
 		redirectPath = redirectIfProductNumIsNull(productNum, attributes, criteria);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
-		redirectPath = redirectIfUserNotFound(userNum, attributes);
 
 		if (redirectPath != null) {
 			return redirectPath;
@@ -290,12 +259,6 @@ public class ProductController {
 			return redirectPath;
 		}
 
-		redirectPath = redirectIfUserNotFound(userNum, attributes);
-
-		if (redirectPath != null) {
-			return redirectPath;
-		}
-
 		boolean isDeleted = productService.deleteByProductNum(productNum);
 
 		if (isDeleted) {
@@ -326,16 +289,6 @@ public class ProductController {
 		return null;
 	}
 
-	private String redirectIfUserNotFound(Long userNum, RedirectAttributes attributes) {
-		if (userService.findByUserNum(userNum) == null) {
-			session.invalidate();
-			MessageConstants.addErrorMessage(attributes, MessageConstants.USER_NOT_FOUND_MSG);
-			return ViewPathUtil.REDIRECT_LOGIN;
-		}
-
-		return null;
-	}
-
 	private String redirectIfProductNotFound(ProductDto productDto, RedirectAttributes attributes, Criteria criteria) {
 		if (productDto == null) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.PRODUCT_NOT_FOUND_MSG);
@@ -358,14 +311,6 @@ public class ProductController {
 			return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, LIST_PATH);
 		}
 		return null;
-	}
-
-	private void setSort(Criteria criteria) {
-		String sort = criteria.getSort();
-
-		if (sort == null || sort.isEmpty()) {
-			criteria.setSort(DEFAULT_SORT);
-		}
 	}
 
 }
