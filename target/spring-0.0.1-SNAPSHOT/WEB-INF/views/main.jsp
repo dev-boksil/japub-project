@@ -108,7 +108,7 @@
               <a href="https://www.youtube.com/@joongangpub" target="_blank" class="video-btn notice-btn">+</a>
             </div>
             <div class="video-content">
-              <iframe src="https://www.youtube.com/embed/zdD80ti_JPI?si=uTqSVYl9gTll0CcZ&loop=1&mute=1&autoplay=1"
+              <iframe src="https://www.youtube.com/embed/9agrf0Z0UYw?si=1tI965nDwut3oGDh&loop=1&mute=1&autoplay=1"
                       title="YouTube video player"
                       frameborder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

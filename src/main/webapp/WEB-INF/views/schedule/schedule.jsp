@@ -40,8 +40,9 @@
               <div class="legend_wrap">
                 <div class="legend_item"><span class="item_1"></span> 예약 가능</div>
                 <div class="legend_item"><span class="item_2"></span> 영업마감</div>
-                <div class="legend_item"><span class="item_3"></span> 외부예약</div>
-                <div class="legend_item"><span class="item_4"></span> 아카데미</div>
+                <div class="legend_item"><span class="item_3"></span> 대관</div>
+                <div class="legend_item"><span class="item_4"></span> 레슨</div>
+                <div class="legend_item"><span class="item_5"></span> 외부레슨</div>
               </div>
 
                   <table class="schedule-table">

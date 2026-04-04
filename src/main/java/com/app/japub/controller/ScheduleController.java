@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.http.HttpHeaders;
@@ -26,6 +27,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.app.japub.common.MessageConstants;
 import com.app.japub.common.SessionUtil;
 import com.app.japub.common.ViewPathUtil;
+import com.app.japub.domain.dto.Criteria;
 import com.app.japub.domain.dto.ScheduleDto;
 import com.app.japub.domain.dto.SchedulesDto;
 import com.app.japub.domain.service.schedule.ScheduleService;
@@ -45,7 +47,12 @@ public class ScheduleController {
 	private final static ResponseEntity<Void> UNAUTHORIZED = new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
 	@GetMapping("/list")
-	public String list(Model model, RedirectAttributes attributes) {
+	public String list(Model model, HttpServletRequest req, Criteria criteria, RedirectAttributes attributes) {
+		if (!SessionUtil.isLogin(session)) {
+			criteria.setToUri(req.getRequestURI());
+			return ViewPathUtil.getRedirectPath(criteria, "login", null);
+		}
+
 		if (!SessionUtil.isAdmin(session)) {
 			MessageConstants.addErrorMessage(attributes, MessageConstants.PERMISSION_NOT_ALLOW_MSG);
 			return ViewPathUtil.REDIRECT_MAIN;

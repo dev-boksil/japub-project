@@ -1,0 +1,231 @@
+.schedule-wrap {
+	width: 80%;
+	margin: 20px auto;
+	overflow-x: auto;
+	background: #fff;
+	font-size: 16px;
+}
+
+.schedule-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	text-align: center;
+	margin-bottom: 30px;
+	margin-top: 20px;
+}
+
+.schedule-table thead th {
+	font-weight: 700;
+	color: #3a3a3a;
+	padding: 10px 0;
+	border-bottom: 1px solid #3c3d46;
+}
+
+.schedule-table .time-head {
+	width: 6%;
+}
+
+.schedule-table .time-col {
+	border-right: 1px solid #dcdcdc;
+	border-bottom: 1px solid #dcdcdc;
+	text-align: center;
+	font-weight: 700;
+	color: #444;
+}
+
+.schedule-table td {
+	border-right: 1px solid #f2f2f2;
+	border-bottom: 1px solid #f2f2f2;
+	padding: 7px;
+	background: #cfe7f9;
+	cursor: pointer;
+	font-size: 13px;
+	color: #3C3D46;
+}
+
+.schedule-table td:hover {
+	/*background: #fff3fe;*/
+	
+}
+
+.schedule-table td>.inner {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 4px;
+}
+
+.schedule-table td>.inner>span {
+	white-space: nowrap;
+	overflow: hidden;
+	/* text-overflow: ellipsis; */
+}
+
+.slot.booked {
+	background: #f6c992;
+}
+
+.slot.blocked {
+	background: #f4c6c6;
+}
+
+.slot.empty {
+	background: #fafafa;
+}
+
+.slot-time, .slot-text {
+	display: block;
+	text-align: center;
+}
+
+.slot-time {
+	color: #3a3a3a;
+}
+
+.slot-text {
+	color: #3f3f3f;
+}
+
+.schedule-table tbody tr:hover td, .schedule-table tbody tr:hover .time-col
+	{
+	background-image: linear-gradient(rgba(255, 255, 255, 0.08),
+		rgba(255, 255, 255, 0.08));
+}
+
+.date_wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-top: 20px;
+}
+
+.date_select {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.date_select img {
+	width: 36px;
+	cursor: pointer;
+	vertical-align: middle;
+}
+
+.date_select span {
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.end-0 {
+	right: 0 !important;
+}
+
+.position-absolute {
+	position: absolute !important;
+}
+
+.date_wrap .btn_today {
+	border: 1px solid #ff465f;
+	color: #ff465f;
+	border-radius: 60px;
+	padding: 10px 16px;
+	box-sizing: border-box;
+	cursor: pointer;
+	background: #fff;
+	font-size: 16px;
+}
+
+.date_wrap .btn_input_date {
+	border: 1px solid #0d6ef9;
+	color: #0d6ef9;
+	border-radius: 60px;
+	padding: 10px 16px;
+	box-sizing: border-box;
+	cursor: pointer;
+	background: #fff;
+	font-size: 16px;
+}
+
+.date_wrap button:hover {
+	background: #fff3fe;
+}
+
+.legend_wrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	margin-top: 30px;
+}
+
+.legend_item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	color: #777;
+	font-weight: 500;
+}
+
+.legend_item span {
+	width: 10px;
+	height: 10px;
+	border-radius: 10px;
+}
+
+body, th, td, select, button, div, span {
+	line-height: 1.4;
+}
+
+.legend_item .item_1 {
+	background: #c5e6ff;
+}
+
+.legend_item .item_2 {
+	background: #d8d8d8;
+}
+
+.legend_item .item_3 {
+	background: #FFCCC8;
+}
+
+.legend_item .item_4 {
+	background: #ffd09e;
+}
+
+.legend_item .item_5 {
+	background: #c1ffa2;
+}
+
+.tit_bar {
+	border-bottom: 1px solid #ddd;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 30px;
+	height: 56px;
+}
+
+.tit_bar span {
+	font-size: 14px;
+	color: #777;
+}
+
+.tit_bar>h2 {
+	margin-top: 0;
+	margin-bottom: 0.5rem;
+	font-weight: bold;
+	line-height: 1.2;
+}
+
+.modal-update {
+	display: none;
+}
+
+.mark_today {
+	width: 25px;
+	right: -26px;
+	top: -7px;
+}

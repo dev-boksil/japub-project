@@ -1,6 +1,7 @@
 com\app\japub\domain\service\board\BoardServiceImpl.class
 com\app\japub\common\FlashAttributeUtil.class
 com\app\japub\domain\service\product\ProductServiceImpl.class
+com\app\japub\domain\service\schedule\ScheduleService.class
 com\app\japub\controller\FindAccountController.class
 com\app\japub\domain\dao\board\BoardDao.class
 com\app\japub\domain\mapper\ProductMapper.class
@@ -14,6 +15,7 @@ com\app\japub\domain\dao\product\ProductDaoImpl.class
 com\app\japub\domain\mapper\FileMapper.class
 com\app\japub\common\ViewPathUtil.class
 com\app\japub\controller\ErrorController.class
+com\app\japub\enums\RESERVATION.class
 com\app\japub\controller\LoginController.class
 com\app\japub\domain\dao\file\FileDao.class
 com\app\japub\common\SessionUtil.class
@@ -22,8 +24,10 @@ com\app\japub\domain\service\comment\CommentServiceImpl.class
 com\app\japub\common\DateUtil.class
 com\app\japub\controller\MypageController.class
 com\app\japub\domain\dao\user\UserDaoImpl.class
+com\app\japub\domain\service\schedule\ScheduleServiceImpl.class
 com\app\japub\domain\service\user\MailServiceImpl.class
 com\app\japub\controller\FileController.class
+com\app\japub\controller\ScheduleController.class
 com\app\japub\domain\dao\comment\CommentDao.class
 com\app\japub\domain\service\board\BoardService.class
 com\app\japub\controller\RestErrorController.class
@@ -31,11 +35,14 @@ com\app\japub\domain\dto\PageDto.class
 com\app\japub\domain\service\product\ProductService.class
 com\app\japub\domain\dto\CommentsDto.class
 com\app\japub\domain\service\file\FileServiceImpl.class
+com\app\japub\domain\dao\schedule\ScheduleDao.class
+com\app\japub\domain\dto\ScheduleDto.class
 com\app\japub\domain\service\comment\CommentService.class
 com\app\japub\domain\service\user\PasswordServiceImpl.class
 com\app\japub\domain\service\admin\AdminServiceImpl.class
 com\app\japub\controller\JoinController.class
 com\app\japub\controller\MainController.class
+com\app\japub\domain\dto\SchedulesDto.class
 com\app\japub\domain\dao\admin\AdminDaoImpl.class
 com\app\japub\domain\service\user\PasswordService.class
 com\app\japub\controller\CommentController.class
@@ -44,8 +51,10 @@ com\app\japub\common\DbConstants.class
 com\app\japub\domain\dao\user\UserDao.class
 com\app\japub\domain\dto\BoardDto.class
 com\app\japub\domain\mapper\UserMapper.class
+com\app\japub\domain\dao\schedule\ScheduleDaoImpl.class
 com\app\japub\domain\dto\ProductDto.class
 com\app\japub\domain\service\admin\AdminService.class
+com\app\japub\domain\mapper\ScheduleMapper.class
 com\app\japub\controller\InfoController.class
 com\app\japub\domain\task\FileTask.class
 com\app\japub\common\MessageConstants.class

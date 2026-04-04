@@ -19,8 +19,9 @@
               >일정 상태
               <select id="schedule_state" name="scheduleState">
                 <option value="" >카테고리를 선택하세요</option>
-                <option value="EXTERNAL" >외부예약</option>
-                <option value="ACADEMY">아카데미</option>
+                <option value="RENTAL" >대관</option>
+                <option value="LESSON">레슨</option>
+                <option value="EXTERNAL">외부레슨</option>
                 <option value="CLOSED" >영업마감</option>
               </select>
             </label>

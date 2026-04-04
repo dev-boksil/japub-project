@@ -1,6 +1,7 @@
 /*--------------------------------------------------------- 전역변수*/
 export const classNames = Object.freeze({ ORIGINAL: "original", NEW: "new", REMOVE: "remove" });
 const fileArray = [];
+const fileSizeArray = [];
 const category = $(".container").data("boardCategory");
 
 /*--------------------------------------------------------- ajax 통신*/
@@ -19,10 +20,17 @@ const fileService = (function() {
 			beforeSend() { $fileInput.prop("disabled", true); $dimmedImg.show(); },
 			complete() { $fileInput.prop("disabled", false); $dimmedImg.hide(); },   // ← 성공/실패 모두에서 닫기
 			success: callback,
-			error: () => {
-				alert("업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-				for (let i = 0; i < length; i++) { fileArray.pop(); }
+			error: xhr => {
+				for (let i = 0; i < length; i++) { fileArray.pop(); fileSizeArray.pop(); }
 				refreshFile(fileArray);
+
+				if (xhr.status == 401) {
+					alert("로그인 후 사용하실 수 있습니다.");
+					location.reload();
+					return;
+				}
+
+				alert("업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
 			}
 		})
 	}
@@ -82,23 +90,23 @@ export function createHiddenInputs(className = classNames.ORIGINAL) {
 	return html;
 }
 
-function refreshFile(fileArray, fileSizeArray, index = -1) {
+function refreshFile(index = -1) {
 	const dataTransfer = new DataTransfer();
 
 	if (index >= 0) {
-		removeFile(fileArray, index)
-		removeFileSize(fileSizeArray, index)
+		removeFile(index)
+		removeFileSize(index)
 	}
 
 	fileArray.forEach(file => dataTransfer.items.add(file));
 	$("input[name=multipartFiles]")[0].files = dataTransfer.files;
 }
 
-function removeFile(fileArray, index) {
+function removeFile(index) {
 	fileArray.splice(index, 1);
 }
 
-function removeFileSize(fileSizeArray, index) {
+function removeFileSize(index) {
 	fileSizeService.subtractFileSize(fileSizeArray[index]);
 	fileSizeArray.splice(index, 1);
 }
@@ -154,7 +162,6 @@ function validateFileName(fileName) {
 
 /*---------------------------------------------------------이벤트*/
 (function() {
-	const fileSizeArray = [];
 	const isUpdate = $(".container").data("boardUpdate");
 	let fileRemoveCount = 0;
 
@@ -172,26 +179,26 @@ function validateFileName(fileName) {
 
 		if (fileTotalCount > maxFileCount) {
 			alert("파일은 최대 2개까지만 업로드할 수 있습니다.");
-			refreshFile(fileArray, fileSizeArray);
+			refreshFile();
 			return;
 		}
 
 		for (const file of files) {
 			if (!validateFileSize(file.size)) {
 				alert("업로드 가능한 용량을 초과 하였습니다.");
-				refreshFile(fileArray, fileSizeArray);
+				refreshFile();
 				return;
 			}
 
 			if (!validateFileName(file.name)) {
 				alert("업로드 가능한 파일 형식이 아닙니다.");
-				refreshFile(fileArray, fileSizeArray);
+				refreshFile();
 				return;
 			}
 
 			if ("download" != category && !isImage(file.type)) {
 				alert("이미지 형식만 업로드 가능합니다.");
-				refreshFile(fileArray, fileSizeArray);
+				refreshFile();
 				return;
 			}
 
@@ -200,8 +207,8 @@ function validateFileName(fileName) {
 			fileSizeArray.push(file.size);
 		}
 
-		fileService.upload(formData, files.length, files => isUpdate ? appendThumbnails(files, true) : appendThumbnails(files, false));
-		refreshFile(fileArray, fileSizeArray);
+		fileService.upload(formData, files.length, files => appendThumbnails(files, isUpdate));
+		refreshFile();
 	});
 
 	$(".thumbnail-ul").on("click", ".file-cancel-btn", function(e) {
@@ -210,11 +217,11 @@ function validateFileName(fileName) {
 		let index = $("li.new").index($li);
 
 		if (!isUpdate) {
-			refreshFile(fileArray, fileSizeArray, $(".file-cancel-btn").index($(this)));
+			refreshFile($(".file-cancel-btn").index($(this)));
 			$li.remove();
 		} else if (index != -1) {
 			$li.remove();
-			refreshFile(fileArray, fileSizeArray, index);
+			refreshFile(index);
 		} else {
 			$li.attr("class", classNames.REMOVE).hide();
 			--fileRemoveCount;

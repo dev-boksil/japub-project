@@ -211,19 +211,19 @@ function createTbodyRows(weekDates, schedules) {
 
 function getColor(scheduleState) {
 	switch (scheduleState) {
+		case "RENTAL":
+			return "#FFCCC8";
+		case "LESSON":
+			return "#ffd09e";
 		case "EXTERNAL":
 			return "#c1ffa2";
-
-		case "ACADEMY":
-			return "#ffd09e";
-
 		case "CLOSED":
 			return "#d8d8d8";
-
 		default:
 			return "#c5e6ff";
 	}
 }
+
 
 function createTheadDates(weekDates, today) { // th yy.MM.dd 요일 표기
 	console.log("today===========", today);
