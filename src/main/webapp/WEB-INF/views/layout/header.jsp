@@ -41,7 +41,7 @@
       </li>
 
       <li>
-        <a class="" href="<c:url value='/board/list?category=free' />">게시판</a>
+        <a class="" href="#">게시판</a>
         <ul class="submenu">
           <li><a href="<c:url value='/board/list?category=free' />">자유게시판</a></li>
           <li><a href="<c:url value='/board/list?category=notice' />">공지사항</a></li>

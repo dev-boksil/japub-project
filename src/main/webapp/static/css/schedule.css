@@ -1,9 +1,13 @@
 .schedule-wrap {
-	width: 80%;
+	width: 82%;
 	margin: 20px auto;
 	overflow-x: auto;
 	background: #fff;
 	font-size: 16px;
+}
+
+.inner>span {
+	font-size: 13px;
 }
 
 .schedule-table {
@@ -37,16 +41,10 @@
 .schedule-table td {
 	border-right: 1px solid #f2f2f2;
 	border-bottom: 1px solid #f2f2f2;
-	padding: 7px;
+	padding: 5px;
 	background: #cfe7f9;
 	cursor: pointer;
-	font-size: 13px;
 	color: #3C3D46;
-}
-
-.schedule-table td:hover {
-	/*background: #fff3fe;*/
-	
 }
 
 .schedule-table td>.inner {
@@ -88,8 +86,7 @@
 	color: #3f3f3f;
 }
 
-.schedule-table tbody tr:hover td, .schedule-table tbody tr:hover .time-col
-	{
+.schedule-table td:hover {
 	background-image: linear-gradient(rgba(255, 255, 255, 0.08),
 		rgba(255, 255, 255, 0.08));
 }
@@ -114,8 +111,7 @@
 	vertical-align: middle;
 }
 
-.date_select span {
-	font-size: 16px;
+span.date-range {
 	font-weight: bold;
 }
 
@@ -135,7 +131,6 @@
 	box-sizing: border-box;
 	cursor: pointer;
 	background: #fff;
-	font-size: 16px;
 }
 
 .date_wrap .btn_input_date {
@@ -146,7 +141,6 @@
 	box-sizing: border-box;
 	cursor: pointer;
 	background: #fff;
-	font-size: 16px;
 }
 
 .date_wrap button:hover {
@@ -229,3 +223,6 @@ body, th, td, select, button, div, span {
 	right: -26px;
 	top: -7px;
 }
+
+/* @media ( max-width : 400px) {
+} */

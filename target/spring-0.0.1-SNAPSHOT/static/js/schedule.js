@@ -163,13 +163,13 @@ function getModalValues() {
 	}
 }
 
-function emptyCheck({ scheduleNum, scheduleState, schedulePrice, scheduleContent, scheduleReservationDate }, isUpdate = false) {
+function emptyCheck({ scheduleNum, scheduleState, schedulePrice, /*scheduleContent*/ scheduleReservationDate }, isUpdate = false) {
 	if (isUpdate && !scheduleNum) { alert("스케줄번호를 입력하세요."); return false; }
 	if (!isUpdate && !scheduleReservationDate) { alert("예약일을 입력하세요"); return false; }
 	if (!scheduleState) { alert("상태를 선택하세요"); return false; }
 	if ("CLOSED" === scheduleState) return true;
 	if (!schedulePrice) { alert("가격을 입력하세요"); return false; }
-	if (!scheduleContent) { alert("내용을 입력하세요"); return false; }
+	/*if (!scheduleContent) { alert("내용을 입력하세요"); return false; }*/
 	return true;
 }
 
