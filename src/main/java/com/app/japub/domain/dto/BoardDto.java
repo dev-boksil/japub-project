@@ -18,6 +18,7 @@ public class BoardDto {
 	private String boardVideoId;
 	private String boardLinkUrl;
 	private String userId;
+	private List<FileDto> files;
 	private List<FileDto> insertFiles;
 	private List<FileDto> deleteFiles;
 }

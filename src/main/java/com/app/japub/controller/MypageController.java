@@ -36,7 +36,7 @@ public class MypageController {
 	private static final String KEY_DELETE = "isDelete";
 
 	@GetMapping("/check-password")
-	public String checkPassword(RedirectAttributes attributes) {
+	public String checkPassword(RedirectAttributes attributes, String isDelete, Model model) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
 		if (userNum == null) {
@@ -49,11 +49,12 @@ public class MypageController {
 			return redirectPath;
 		}
 
+		model.addAttribute(KEY_DELETE, parseBoolean(isDelete));
 		return ViewPathUtil.getForwardPath(BASE_PATH, CHECK_PASSWORD_PATH);
 	}
 
 	@PostMapping("/check-password")
-	public String checkPassword(String userPassword, String isDelete, RedirectAttributes attributes) {
+	public String checkPassword(String userPassword, boolean isDelete, RedirectAttributes attributes) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
 		if (userNum == null) {
@@ -71,11 +72,11 @@ public class MypageController {
 		boolean isSuccess = passwordService.matches(userPassword, userDto.getUserPassword());
 
 		if (!isSuccess) {
-			return redirectToCheckPassword(attributes, parseBoolean(isDelete), MessageConstants.WRONG_PASSWORD_MSG);
+			return redirectToCheckPassword(attributes, isDelete, MessageConstants.WRONG_PASSWORD_MSG);
 		}
 
 		FlashAttributeUtil.addSuccessToFlash(attributes);
-		return ViewPathUtil.getRedirectPath(null, BASE_PATH, parseBoolean(isDelete) ? DELETE_PATH : UPDATE_PATH);
+		return ViewPathUtil.getRedirectPath(null, BASE_PATH, isDelete ? DELETE_PATH : UPDATE_PATH);
 	}
 
 	@GetMapping("/update")
@@ -112,6 +113,8 @@ public class MypageController {
 		if (!Objects.equals(userNum, userDto.getUserNum())) {
 			return redirectToCheckPassword(attributes, isDelete, MessageConstants.PERMISSION_NOT_ALLOW_MSG);
 		}
+
+		userDto.setUserNum(userNum);
 
 		boolean isSuccess = isDelete ? userService.delete(userNum) : userService.update(userDto);
 

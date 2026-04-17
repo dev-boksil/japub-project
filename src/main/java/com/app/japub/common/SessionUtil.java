@@ -57,6 +57,7 @@ public class SessionUtil {
 			return false;
 		}
 
+		session.removeAttribute(SUCCESS_KEY);
 		return true;
 	}
 

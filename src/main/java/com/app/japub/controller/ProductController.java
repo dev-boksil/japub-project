@@ -1,5 +1,6 @@
 package com.app.japub.controller;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,10 +43,15 @@ public class ProductController {
 	private static final String REGISTER_PATH = "register";
 	private static final String UPDATE_PATH = "update";
 	private static final String PRDOUCT_KEY = "product";
+	private static final List<String> sorts = Arrays.asList("free", "low_price", "high_price");
 
 	@GetMapping("/list")
 	public void list(Criteria criteria, Model model) {
 		criteria.setAmount(DEFAULT_AMOUNT);
+		if (!sorts.contains(criteria.getSort())) {
+			criteria.setSort(DEFAULT_SORT);
+		}
+
 		List<ProductDto> products = productService.findByCriteria(criteria);
 		products.forEach(productService::setProductDiscountPrice);
 		products.forEach(productService::setProductThumbnailPath);

@@ -142,21 +142,16 @@ public class BoardController {
 
 		boardService.incrementBoardReadCount(boardNum);
 		setBoardDisplayData(boardDto);
-		model.addAttribute(BOARD_KEY, boardDto);
-		SessionUtil.addIsAdminToModel(model, session);
 
 		Optional.ofNullable(userService.findByUserNum(SessionUtil.getSessionNum(session)))
 				.ifPresent(userDto -> model.addAttribute("userId", userDto.getUserId()));
 
-		if (!DOWNLOAD_CATEGORY.equals(boardDto.getBoardCategory())) {
-			Optional.ofNullable(fileService.findByBoardNum(boardNum)).ifPresent(files -> {
-				files.forEach(fileService::setFilePath);
-				model.addAttribute("files", files);
-				model.addAttribute("showImage", true);
-			});
-		}
+		setFiles(boardDto, model);
+		SessionUtil.addIsAdminToModel(model, session);
+		model.addAttribute(BOARD_KEY, boardDto);
 
 		return ViewPathUtil.getForwardPath(BASE_PATH, DETAIL_PATH);
+
 	}
 
 	@GetMapping("/update")
@@ -302,6 +297,18 @@ public class BoardController {
 		return ViewPathUtil.getRedirectPath(criteria, BASE_PATH, DETAIL_PATH);
 	}
 
+	private void setFiles(BoardDto boardDto, Model model) {
+		if (DOWNLOAD_CATEGORY.equals(boardDto.getBoardCategory())) {
+			return;
+		}
+
+		Optional.ofNullable(fileService.findByBoardNum(boardDto.getBoardNum())).ifPresent(files -> {
+			files.forEach(fileService::setFilePath);
+			boardDto.setFiles(files);
+			model.addAttribute("showImage", !files.isEmpty());
+		});
+	}
+
 	private String redirectIfUserNotFound(UserDto userDto, RedirectAttributes attributes) {
 		if (userDto == null) {
 			session.invalidate();
@@ -357,8 +364,9 @@ public class BoardController {
 	private void setCategory(Criteria criteria, Model model) {
 		String category = criteria.getCategory();
 
-		if (category == null || category.isEmpty()) {
+		if (category == null || category.isBlank()) {
 			criteria.setCategory(DEFAULT_CATEGORY);
+			return;
 		}
 
 		if (isValidCategory(category)) {

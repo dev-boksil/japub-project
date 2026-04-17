@@ -54,7 +54,7 @@ public class LoginController {
 		SessionUtil.addUserNumToSession(session, userDto);
 		SessionUtil.addIsAdminToSession(session, userDto);
 		setCookie(rememberId, userId, resp);
-		return getToUri(req, criteria, boardNum, productNum);
+		return getToUri(req, attributes, criteria, boardNum, productNum);
 	}
 
 	@GetMapping("/logout")
@@ -72,7 +72,8 @@ public class LoginController {
 		resp.addCookie(cookie);
 	}
 
-	private String getToUri(HttpServletRequest req, Criteria criteria, Long boardNum, Long productNum) {
+	private String getToUri(HttpServletRequest req, RedirectAttributes attributes, Criteria criteria, Long boardNum,
+			Long productNum) {
 		String toUri = criteria.getToUri();
 
 		if (toUri == null || toUri.isEmpty()) {
@@ -89,17 +90,10 @@ public class LoginController {
 			toUri = "/" + toUri;
 		}
 
-		StringBuilder builder = new StringBuilder();
+		attributes.addAttribute("boardNum", boardNum);
+		attributes.addAttribute("productNum", productNum);
 
-		if (boardNum != null) {
-			builder.append("&boardNum=").append(boardNum);
-		}
-
-		if (productNum != null) {
-			builder.append("&productNum=").append(productNum);
-		}
-
-		return "redirect:" + toUri + criteria.getParams() + builder.toString();
+		return "redirect:" + toUri + criteria.getParams();
 	}
 
 }
