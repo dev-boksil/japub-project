@@ -46,7 +46,7 @@
 	            	<div class="media-box">
 	            		<c:if test="${showImage}">
 			                <div class="img-box">
-				                <c:forEach var="file" items="${files}">
+				                <c:forEach var="file" items="${board.files}">
 				                    <img src="<c:url value='/upload/files/${file.filePath}' />" alt="${file.fileName}" />
 				                </c:forEach>
 			            	</div>

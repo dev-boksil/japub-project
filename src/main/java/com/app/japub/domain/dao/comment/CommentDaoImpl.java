@@ -44,4 +44,9 @@ public class CommentDaoImpl implements CommentDao {
 	public int getPageCount(Criteria criteria, Long boardNum) {
 		return commentMapper.getPageCount(criteria, boardNum);
 	}
+
+	@Override
+	public CommentDto findByCommentNum(Long commentNum) {
+		return commentMapper.findByCommentNum(commentNum);
+	}
 }

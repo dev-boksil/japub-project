@@ -34,76 +34,81 @@ public class CommentController {
 	private final AdminService adminService;
 	private final UserService userService;
 	private final HttpSession session;
-	private static final ResponseEntity<Void> SUCCESS_CODE = ResponseEntity.ok().build();
-	private static final ResponseEntity<Void> ERROR_CODE = ResponseEntity.badRequest().build();
-	private static final ResponseEntity<Void> LOGIN_ERROR_CODE = ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+	private static final ResponseEntity<String> SUCCESS = ResponseEntity.ok().build();
+	private static final ResponseEntity<String> ERROR = new ResponseEntity<String>("작업 중 오류가 발생했습니다 잠시 후 다시 시도해 주세요.",
+			HttpStatus.BAD_REQUEST);
+	private static final ResponseEntity<String> LOGIN_ERROR = new ResponseEntity<String>("로그인 후 사용하실 수 있습니다.",
+			HttpStatus.UNAUTHORIZED);
+	private static final ResponseEntity<String> COMMENT_NOT_FOUND = new ResponseEntity<String>("삭제되었거나 존재하지 않는 댓글입니다.",
+			HttpStatus.NOT_FOUND);
+	private static final ResponseEntity<String> USER_NOT_FOUND = new ResponseEntity<String>("존재하지 않는 회원 입니다.",
+			HttpStatus.NOT_FOUND);
 
-	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Void> insert(@RequestBody CommentDto commentDto) {
-		Long userNum = (Long) session.getAttribute(SessionUtil.KEY);
+	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = "text/plain;charset=UTF-8")
+	public ResponseEntity<String> insert(@RequestBody CommentDto commentDto) {
+		System.out.println(commentDto);
+		Long userNum = SessionUtil.getSessionNum(session);
 
-		if (userNum == null) {
-			return LOGIN_ERROR_CODE;
-		}
-
-		if (userService.findByUserNum(userNum) == null) {
+		if (userNum == null || userService.findByUserNum(userNum) == null) {
 			session.invalidate();
-			return LOGIN_ERROR_CODE;
+			return LOGIN_ERROR;
 		}
 
 		commentDto.setUserNum(userNum);
 
-		return commentService.insert(commentDto) ? SUCCESS_CODE : ERROR_CODE;
+		boolean success = commentService.insert(commentDto);
+
+		return success ? SUCCESS : ERROR;
 	}
 
-	@PatchMapping(value = "/{commentNum}", consumes = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Void> update(@RequestBody CommentDto commentDto, @PathVariable Long commentNum) {
+	@PatchMapping(value = "/{commentNum}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = "text/plain;charset=UTF-8")
+	public ResponseEntity<String> update(@RequestBody CommentDto commentDto, @PathVariable Long commentNum) {
 
-		Long userNum = (Long) session.getAttribute(SessionUtil.KEY);
-
-		if (userNum == null) {
-			return ERROR_CODE;
-		}
-
-		commentDto.setUserNum(userNum);
-		commentDto.setCommentNum(commentNum);
-
-		boolean isUpdated = SessionUtil.isAdmin(session) ? adminService.updateComment(commentDto)
-				: commentService.update(commentDto);
-
-		if (isUpdated) {
-			return SUCCESS_CODE;
-		}
-
-		if (userService.findByUserNum(userNum) == null) {
-			session.invalidate();
-			return LOGIN_ERROR_CODE;
-		}
-
-		return ERROR_CODE;
-	}
-
-	@DeleteMapping(value = "/{commentNum}")
-	public ResponseEntity<Void> delete(@PathVariable Long commentNum) {
 		Long userNum = SessionUtil.getSessionNum(session);
 
 		if (userNum == null) {
-			return ERROR_CODE;
+			return LOGIN_ERROR;
 		}
 
-		boolean isDeleted = SessionUtil.isAdmin(session) ? adminService.deleteByCommentNum(commentNum)
+		commentDto.setCommentNum(commentNum);
+		commentDto.setUserNum(userNum);
+
+		boolean success = SessionUtil.isAdmin(session) ? adminService.updateComment(commentDto)
+				: commentService.update(commentDto);
+
+		if (success) {
+			return SUCCESS;
+		}
+
+		if (!SessionUtil.isAdmin(session) && userService.findByUserNum(userNum) == null) {
+			session.invalidate();
+			return USER_NOT_FOUND;
+		}
+		
+		return commentService.findByCommentNum(commentNum) == null ? COMMENT_NOT_FOUND : ERROR;
+	}
+
+	@DeleteMapping(value = "/{commentNum}", produces = "text/plain;charset=UTF-8")
+	public ResponseEntity<String> delete(@PathVariable Long commentNum) {
+		Long userNum = SessionUtil.getSessionNum(session);
+
+		if (userNum == null) {
+			return LOGIN_ERROR;
+		}
+
+		boolean success = SessionUtil.isAdmin(session) ? adminService.deleteByCommentNum(commentNum)
 				: commentService.delete(userNum, commentNum);
 
-		if (isDeleted) {
-			return SUCCESS_CODE;
+		if (success) {
+			return SUCCESS;
 		}
 
-		if (userService.findByUserNum(userNum) == null) {
+		if (!SessionUtil.isAdmin(session) && userService.findByUserNum(userNum) == null) {
 			session.invalidate();
-			return LOGIN_ERROR_CODE;
+			return USER_NOT_FOUND;
 		}
 
-		return ERROR_CODE;
+		return commentService.findByCommentNum(commentNum) == null ? COMMENT_NOT_FOUND : ERROR;
 	}
 
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)

@@ -46,4 +46,9 @@ public class CommentServiceImpl implements CommentService {
 		criteria.setPage(criteria.getPage() + 1);
 		return commentDao.getPageCount(criteria, boardNum);
 	}
+
+	@Override
+	public CommentDto findByCommentNum(Long commentNum) {
+		return commentDao.findByCommentNum(commentNum);
+	}
 }

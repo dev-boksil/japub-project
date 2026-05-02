@@ -24,6 +24,7 @@
 			      <div><span>비밀번호를 다시 입력해주세요.</span></div>
 			      <form id="passwordCheckForm" method="POST" >
 			        <input type="password" name="userPassword" placeholder="비밀번호 입력"  />
+			        <input type="hidden" name="isDelete" value="${isDelete}"  />
 			        <input type="submit" class="pw-check-btn" value="확인" />
 			      </form>
 	    	</div>

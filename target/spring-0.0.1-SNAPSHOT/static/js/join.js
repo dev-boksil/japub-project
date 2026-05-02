@@ -169,7 +169,7 @@ function successCallback($input, isSuccess) {
 function errorCallback(xhr, $input) {
 	let name = getName($input);
 	name = name === '아이디' ? `${name}를` : `${name}을`;
-	changeCss($input, false, xhr.status == 400 ? `${name} 입력해 주세요.` : "요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+	xhr.status == 400 ? changeCss($input, false, `${name} 입력해 주세요.`) : alert("요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
 	setValidationCheck($input, false);
 }
 

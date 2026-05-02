@@ -20,4 +20,6 @@ public interface CommentService {
 			@Param("boardNum") Long boardNum);
 	
 	public abstract int getNextPageCount(@Param("criteria") Criteria criteria, @Param("boardNum") Long boardNum);
+	
+	public abstract CommentDto findByCommentNum(Long commentNum);
 }
