@@ -2,11 +2,11 @@ import { classNames, createHiddenInputs, showThumbnails } from "./file.js";
 
 (function() {
 	const boardNum = $(".container").data("boardNum");
-	const category = $(".container").data("boardCategory")
+	const isDownload = "download" == $(".container").data("boardCategory")
 	const isDetail = $(".container").data("boardDetail");
 
 	if (isUpdate()) showThumbnails(boardNum, false);
-	if (isDetail && ("download" === category)) showThumbnails(boardNum, true);
+	if (isDetail && isDownload) showThumbnails(boardNum, true);
 })();
 
 

@@ -1,58 +1,67 @@
 $(document).ready(function() {
 	let page = 0; //0이 1페이지
+	let selectedDate = "";
 	showSchedules(page);
 
 	$("table.schedule-table").on("click", "td.slot", function() {
 		if (!checkAccess()) return;
-		setModalContent($(this));
+		setModalContent(this);
 	});
 
 	$("img.next-btn").on("click", function() {
-		showSchedules(++page);
+		showSchedules(++page, selectedDate);
 	});
 
 	$("img.prev-btn").on("click", function() {
-		showSchedules(--page);
+		showSchedules(--page, selectedDate);
 	});
 
 	$(".btn_today").on("click", function() {
-		showSchedules(0);
+		page = 0;
+		selectedDate = "";
+		showSchedules(page, selectedDate);
 	});
 
 	$(".btn_input_date").on("click", function() {
 		const date = prompt("날짜를 입력하세요", "YYYY-MM-DD");
 
-		if (date == null || !date.trim()) {
+		if (date == null) return;
+
+		if (date === "YYYY-MM-DD" || !date.trim()) {
 			alert("날짜를 입력해주세요.");
 			return;
 		}
 
-		if (date === "YYYY-MM-DD") {
+		if (!isValidDateString(date)) {
+			alert("날짜 형식은 yyyy-MM-dd 로 입력해 주세요.");
 			return;
 		}
 
-		showSchedules(0, date);
+		page = 0;
+		selectedDate = date;
+		showSchedules(page, selectedDate);
 	});
 
-	$(".btn_close,.btn_close").on("click", closeModal);
+
+	$(".btn_close,.btn_close").on("click", () => toggleModal(false));
 
 	$(".modal-register").on("click", function() {
-		const schedule = getModalValues();
+		const schedule = getValuesFromModal();
 		delete schedule['scheduleNum'];
 		if (!emptyCheck(schedule, false)) return;
 		scheduleService.insert(schedule, () => {
-			closeModal();
-			showSchedules(page);
+			toggleModal(false);
+			showSchedules(page, selectedDate);
 		});
 	});
 
 	$(".modal-update").on("click", function() {
 		if (!confirm("정말로 수정 하시겠습니까?")) return;
-		const schedule = getModalValues();
+		const schedule = getValuesFromModal();
 		if (!emptyCheck(schedule, true)) return;
 		scheduleService.update(schedule, () => {
-			closeModal();
-			showSchedules(page);
+			toggleModal(false);
+			showSchedules(page, selectedDate);
 		});
 	});
 
@@ -60,8 +69,8 @@ $(document).ready(function() {
 		if (!confirm("정말로 삭제 하시겠습니까?")) return;
 		const scheduleNum = $(this).closest(".custom_modal_overlay").find("input[name=scheduleNum]").val().trim();
 		scheduleService.remove(scheduleNum, () => {
-			closeModal();
-			showSchedules(page);
+			toggleModal(false);
+			showSchedules(page, selectedDate);
 		});
 	});
 });
@@ -119,68 +128,102 @@ const scheduleService = (function() {
 })();
 
 
-function closeModal() {
+function toggleModal(show) {
 	const $modal = $(".custom_modal_overlay");
-	$modal.find("input").val("");
-	$modal.find("select").val("");
-	$(".custom_modal_overlay").removeClass("show");
+
+	if (show) {
+		$modal.addClass("show")
+	} else {
+		$modal.removeClass("show");
+		$modal.find("input").val("");
+		$modal.find("select").val("");
+	}
+
 }
 
-function setModalContent($td) {
-	const $modal = $("div.custom_modal_overlay");
-	const scheduleNum = $td.data("scheduleNum");
+function setModalContent(td) {
 
-	$("strong.reservationDate").text($td.data("dateRange"));
+	const $td = $(td);
+	const scheduleNum = $td.data("scheduleNum");
+	const $registerBtn = $(".modal-register");
+	const $updateBtn = $(".modal-update");
+	const $removeBtn = $(".btn_delete");
+	const { $scheduleNumInput, $reservationDateInput, $schedulePriceInput, $scheduleContentInput, $scheduleStateSelect } = getEleFromModal();
 
 	if (scheduleNum) {
 		scheduleService.findByScheduleNum(scheduleNum, schedule => {
-			$modal.find("input[name=scheduleNum]").val(schedule.scheduleNum);
-			$modal.find("select[name=scheduleState]").val(schedule.scheduleState);
-			$modal.find("input[name=scheduleContent]").val(schedule.scheduleContent);
-			$modal.find("input[name=schedulePrice]").val(schedule.schedulePrice);
-			$(".modal-register").hide();
-			$(".modal-update").css("display", "inline-block");
-			$(".btn_delete").css("display", "inline-block");
+			$scheduleNumInput.val(scheduleNum);
+			$schedulePriceInput.val(schedule.schedulePrice);
+			$scheduleContentInput.val(schedule.scheduleContent);
+			$scheduleStateSelect.val(schedule.scheduleState);
+			$registerBtn.hide();
+			$updateBtn.css("display", "inline-block");
+			$removeBtn.css("display", "inline-block");
 		});
 	} else {
-		$("input[name=reservationDate]").val($td.data("currentDate"));
-		$(".modal-register").css("display", "inline-block");
-		$(".modal-update").hide();
-		$(".btn_delete").hide();
+		$reservationDateInput.val($td.data("scheduleDate"));
+		$schedulePriceInput.val("");
+		$scheduleContentInput.val("");
+		$scheduleStateSelect.val("");
+		$registerBtn.css("display", "inline-block");
+		$updateBtn.hide();
+		$removeBtn.hide();
 	}
 
-	$modal.addClass("show");
+	$("strong.reservationDate").text($td.data("dateRange"));
+	toggleModal(true);
 }
 
-function getModalValues() {
-	const $modal = $(".custom_modal_overlay");
+function getValuesFromModal() {
+	const { $scheduleNumInput, $reservationDateInput, $schedulePriceInput, $scheduleContentInput, $scheduleStateSelect } = getEleFromModal();
 	return {
-		scheduleNum: $modal.find("input[name=scheduleNum").val().trim(),
-		scheduleState: $modal.find("select[name=scheduleState]").val().trim(),
-		schedulePrice: $modal.find("input[name=schedulePrice]").val().trim(),
-		scheduleContent: $modal.find("input[name=scheduleContent]").val().trim(),
-		scheduleReservationDate: $modal.find("input[name=reservationDate]").val().trim()
+		scheduleNum: $scheduleNumInput.val().trim(),
+		scheduleReservationDate: $reservationDateInput.val().trim(),
+		schedulePrice: $schedulePriceInput.val().trim(),
+		scheduleContent: $scheduleContentInput.val().trim(),
+		scheduleState: $scheduleStateSelect.val()
+	}
+}
+
+function getEleFromModal() {
+	return {
+		$scheduleNumInput: $("input[name=scheduleNum]"),
+		$reservationDateInput: $("input[name=reservationDate]"),
+		$schedulePriceInput: $("input[name=schedulePrice]"),
+		$scheduleContentInput: $("input[name=scheduleContent]"),
+		$scheduleStateSelect: $("select[name=scheduleState]")
 	}
 }
 
 function emptyCheck({ scheduleNum, scheduleState, schedulePrice, /*scheduleContent*/ scheduleReservationDate }, isUpdate = false) {
-	if (isUpdate && !scheduleNum) { alert("스케줄번호를 입력하세요."); return false; }
-	if (!isUpdate && !scheduleReservationDate) { alert("예약일을 입력하세요"); return false; }
-	if (!scheduleState) { alert("상태를 선택하세요"); return false; }
-	if ("CLOSED" === scheduleState) return true;
-	if (!schedulePrice) { alert("가격을 입력하세요"); return false; }
-	/*if (!scheduleContent) { alert("내용을 입력하세요"); return false; }*/
+	if (isUpdate && !scheduleNum) {
+		alert("스케줄번호를 입력하세요.");
+		return false;
+	}
+
+	if (!isUpdate && !scheduleReservationDate) {
+		alert("예약날짜가 존재하지 않습니다.");
+		return false;
+	}
+
+	if (!scheduleState) {
+		alert("카테고리를 선택하세요");
+		return false;
+	}
+
+	if (!schedulePrice) {
+		alert("가격을 입력하세요");
+		return false;
+	}
+
 	return true;
 }
 
 function renderSchedules(schedulesDto) {
-	const weekDates = schedulesDto.weekDates;
-	const schedules = schedulesDto.schedules;
-	const today = schedulesDto.today;
+	const { schedules, weekDates, today } = schedulesDto;
 	$("span.date-range").text(`${weekDates[0]} ~ ${weekDates[6]}`);
 	$("tr.thead-date").empty().append(createTheadDates(weekDates, today));
 	$("tbody.tbody").empty().append(createTbodyRows(weekDates, schedules));
-	$("td.slot").each((i, td) => $(td).css("background-color", $(td).data("color")));
 }
 
 function showSchedules(page, date = "") {
@@ -195,9 +238,10 @@ function createTbodyRows(weekDates, schedules) {
 		html += `<tr>`;
 		html += `<th class="time-col">${hour}</th>`;
 		for (let j = 0; j < 7; j++) {
-			const currentDate = `${weekDates[j]} ${hour}:00`;
-			const schedule = schedules.find(schedule => schedule.scheduleReservationDate.trim() === currentDate.trim());
-			html += `<td class="slot available" data-schedule-num="${schedule ? schedule.scheduleNum : ''}" data-color="${getColor(schedule ? schedule.scheduleState : "")}" data-current-date="${currentDate}" data-date-range ="${currentDate} ~ ${weekDates[j + 1]} ${nextHour}:00">`;
+			const scheduleDate = `${weekDates[j]} ${hour}:00`;
+			const scheduleRange = `${scheduleDate} ~ ${weekDates[j + 1]} ${nextHour}:00`;
+			const schedule = schedules.find(schedule => schedule.scheduleReservationDate.trim() === scheduleDate.trim());
+			html += `<td class="slot available" style="background:${getColor(schedule ? schedule.scheduleState : '')}" data-schedule-num="${schedule ? schedule.scheduleNum : ''}" data-schedule-date="${scheduleDate}" data-schedule-range="${scheduleRange}">`;
 			html += `<div class="inner">`;
 			html += `<span class="slot-time">${hour}:00~${nextHour}:00</span>`;
 			html += `<span class="slot-text">${schedule ? schedule.scheduleContent : '예약가능'}</span>`;
@@ -226,7 +270,6 @@ function getColor(scheduleState) {
 
 
 function createTheadDates(weekDates, today) { // th yy.MM.dd 요일 표기
-	console.log("today===========", today);
 	const dayOfWeek = ["월", "화", "수", "목", "금", "토", "일"];
 	let html = `<th class="time-head"></th>`;
 	weekDates.forEach((date, i) => {
@@ -244,12 +287,12 @@ function formatDate(date) {
 }
 
 function checkAccess() {
-	if (!sessionUserNum) {
+	if (sessionUserNum == null || !sessionUserNum) {
 		alert("로그인 후 사용하실 수 있습니다.");
 		return false;
 	}
 
-	if (!isAdmin) {
+	if (isAdmin == null || !isAdmin) {
 		alert("해당 작업을 수행할 수 있는 권한이 없습니다.");
 		return false;
 	}
@@ -264,7 +307,7 @@ function errorCallback(xhr) {
 		return;
 	}
 
-	if (xhr.status == 401) {
+	if (xhr.status == 403) {
 		alert("해당 작업을 수행할 수 있는 권한이 없습니다.");
 		location.reload();
 		return;
@@ -276,6 +319,20 @@ function errorCallback(xhr) {
 		return;
 	}
 
-	alert(xhr.responseText ? xhr.responseText : "요청 처리 중 문제가 발생했습니다. 다시 시도해 주세요");
+	alert("요청 처리 중 문제가 발생했습니다. 다시 시도해 주세요");
+}
+
+
+function isValidDateString(dateStr) {
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+		return false;
+	}
+
+	const [year, month, day] = dateStr.split("-").map(Number);
+	const date = new Date(year, month - 1, day);
+
+	return date.getFullYear() === year
+		&& date.getMonth() === month - 1
+		&& date.getDate() === day;
 }
 

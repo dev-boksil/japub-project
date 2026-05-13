@@ -20,19 +20,8 @@ const fileService = (function() {
 			beforeSend() { $fileInput.prop("disabled", true); $dimmedImg.show(); },
 			complete() { $fileInput.prop("disabled", false); $dimmedImg.hide(); },   // ← 성공/실패 모두에서 닫기
 			success: callback,
-			error: xhr => {
-				for (let i = 0; i < length; i++) { fileArray.pop(); fileSizeArray.pop(); }
-				refreshFile(fileArray);
-
-				if (xhr.status == 401) {
-					alert("로그인 후 사용하실 수 있습니다.");
-					location.reload();
-					return;
-				}
-
-				alert("업로드 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-			}
-		})
+			error: xhr => uploadErrorCallback(xhr, length)
+		});
 	}
 
 	function getFiles(boardNum, callback) {
@@ -107,8 +96,10 @@ function removeFile(index) {
 }
 
 function removeFileSize(index) {
+	console.log("삭제전사이즈===", fileSizeService.getTotalFileSize());
 	fileSizeService.subtractFileSize(fileSizeArray[index]);
 	fileSizeArray.splice(index, 1);
+	console.log("삭제후사이즈===", fileSizeService.getTotalFileSize());
 }
 
 export function showThumbnails(boardNum, isDownload) {
@@ -124,7 +115,7 @@ function createThumbnails(files, isUpdate = false, isDownload = false) {
 
 	files.forEach(file => {
 		const displayFilePath = encodeURIComponent(`${file.fileUploadPath}/t_${file.fileUuid}_${file.fileName}`);
-		const downloadFilePath = displayFilePath.replace("t_", "");
+		const downloadFilePath = encodeURIComponent(`${file.fileUploadPath}/${file.fileUuid}_${file.fileName}`);
 
 		html += `<li class="${isUpdate ? classNames.NEW : classNames.ORIGINAL}" data-file-num="${file.fileNum ? file.fileNum : ""}" data-file-uuid="${file.fileUuid}" data-file-upload-path="${file.fileUploadPath}" data-file-name="${file.fileName}" data-file-type="${file.fileType}" data-file-size="${file.fileSize}" >`;
 		html += isDownload ? `<a href="${contextPath}/files/download?filePath=${downloadFilePath}&category=${category}">` : ``;
@@ -141,15 +132,15 @@ function isImage(fileType) {
 	return !!fileType && fileType.startsWith("image/");
 }
 
-function validateFileSize(fileSize) {
+function validateFileSize(files) {
 	const maxFileSize = 1024 * 1024 * 700;
+	let totalFileSize = 0;
 
-	if (maxFileSize < fileSizeService.getTotalFileSize() + fileSize) {
-		return false;
-	} else {
-		fileSizeService.addFileSize(fileSize);
-		return true;
+	for (const file of files) {
+		totalFileSize += file.size;
 	}
+
+	return maxFileSize >= fileSizeService.getTotalFileSize() + totalFileSize;
 }
 
 function validateFileName(fileName) {
@@ -158,6 +149,25 @@ function validateFileName(fileName) {
 		return false;
 	}
 	return true;
+}
+
+function uploadErrorCallback(xhr, fileLength) {
+	if (xhr.status == 401) {
+		alert("로그인 후 사용하실 수 있습니다.");
+		location.reload();
+		return;
+	}
+
+	alert("업로드중 오류가 발생했습니다 잠시 후 다시 시도해 주세요.");
+
+	for (let i = 0; i < fileLength; i++) {
+		fileArray.pop();
+		const removedSize = fileSizeArray.pop();
+		console.log("removedSize==", removedSize);
+		fileSizeService.subtractFileSize(removedSize);
+	}
+
+	refreshFile();
 }
 
 /*---------------------------------------------------------이벤트*/
@@ -171,10 +181,9 @@ function validateFileName(fileName) {
 		const formData = new FormData();
 		const boardNum = $(".container").data("boardNum");
 		const maxFileCount = 2;
-		let fileTotalCount = 0;
+		let fileTotalCount = files.length + fileArray.length + fileRemoveCount;
 
-		fileTotalCount = files.length + fileArray.length + fileRemoveCount;
-
+		console.log("현재 파일사이즈==", fileSizeService.getTotalFileSize());
 		if (boardNum) fileService.count(boardNum, count => fileTotalCount += count);
 
 		if (fileTotalCount > maxFileCount) {
@@ -183,12 +192,13 @@ function validateFileName(fileName) {
 			return;
 		}
 
+		if (!validateFileSize(files)) {
+			alert("업로드 가능한 용량을 초과 하였습니다.");
+			refreshFile();
+			return;
+		}
+
 		for (const file of files) {
-			if (!validateFileSize(file.size)) {
-				alert("업로드 가능한 용량을 초과 하였습니다.");
-				refreshFile();
-				return;
-			}
 
 			if (!validateFileName(file.name)) {
 				alert("업로드 가능한 파일 형식이 아닙니다.");
@@ -201,10 +211,13 @@ function validateFileName(fileName) {
 				refreshFile();
 				return;
 			}
+		}
 
+		for (const file of files) {
 			formData.append("multipartFiles", file);
 			fileArray.push(file);
 			fileSizeArray.push(file.size);
+			fileSizeService.addFileSize(file.size);
 		}
 
 		fileService.upload(formData, files.length, files => appendThumbnails(files, isUpdate));

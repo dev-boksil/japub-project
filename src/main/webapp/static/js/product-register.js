@@ -6,7 +6,7 @@
 
 		if (!file) { return; }
 
-		if (!file.type.startsWith("image/")) {
+		if (file.type != null && !file.type.startsWith("image/")) {
 			alert("이미지형식만 업로드 가능합니다.");
 			$thumbnail.hide();
 			$input.val("");
